@@ -1,0 +1,39 @@
+http://www.nvidia.ca/docs/IO/76976/HPG2009-Trace-Efficiency.pdf
+http://www.nvidia.com/content/nvision2008/tech_presentations/Game_Developer_Track/NVISION08-Interactive_Ray_Tracing.pdf
+http://users.softlab.ntua.gr/~ttsiod/cudarenderer-BVH.html
+
+
+Technical Outline
+
+Currently, the render time of the scene is too long, even with my existing multithreading implementation. Currently, each thread renders only a subdivision, and then terminates. To get to the point where a thread can render a section in a small amount of time, it has to be a small subdivision which would mean a lot of threads, creating overhead. 
+
+A queue of subdivisions that need to be rendered would decouple the number of threads with the number of subdivisions, as the threads could just work their way through the queue, rendering a new subdivision when they're done. Other improvements could be made to increase the efficiency of each thread.
+
+I at least plant o shift part of the work onto the GPU, so I'll need to find out how to communicate with the GPU for more than just OpenGL calls, like how to write programs, delegate tasks, generate threads, transfer data, and potentially actually trace rays on the GPU.
+
+
+
+Objectives
+
+Better multithreading, for faster rendering and better use of resources
+
+Realtime updating and display of progress, so better feedback and progress estimates
+
+Jittery supersampling for smoother and less predictable edges
+
+Reflection rays bouncing off of reflective materials
+
+Refraction rays through translucent materials
+
+First hit acceleration, to speed up primary rays
+
+Texture mapping for easier modelling and prettier objects
+
+More primitives to increase object range while not adding time to render meshes
+
+Phong illumination for smoothing lighting across meshes
+
+CSG for larger variety range without needing meshes
+
+Hardware Acceleration / CUDA
+

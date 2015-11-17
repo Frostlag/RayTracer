@@ -1,0 +1,56 @@
+http://www.nvidia.ca/docs/IO/76976/HPG2009-Trace-Efficiency.pdf
+http://www.nvidia.com/content/nvision2008/tech_presentations/Game_Developer_Track/NVISION08-Interactive_Ray_Tracing.pdf
+http://users.softlab.ntua.gr/~ttsiod/cudarenderer-BVH.html
+
+
+
+Topics/Purpose
+
+The purpose of extending my ray tracer is to make a more usuable ray tracer that uses more of the system's resources, and has enough functions that it can render most things passably, but providing enough feedback and turnaround time so that iterating a scene with it is a lot easier.
+
+
+The scene will be a desktop next to a window decorated with various knick-knacks. Among the knick-knacks will be a glass, a metal uupa, and a big sister figurine. It will also have a monitor that is currently displaying a scene, and beside the monitor will be the computer case.
+
+
+Technical Outline
+
+Currently, the render time of the scene is too long, even with my existing multithreading implementation. Currently, each thread renders only a subdivision, and then terminates. To get to the point where a thread can render a section in a small amount of time, it has to be a small subdivision which would mean a lot of threads, creating overhead. 
+
+Even if the render times comes down and becomes manageable, it would still be nice to have feedback while the scene is rendering. So what I can do is show the scene as it is rendering, which would immediately show the user of any problems with the scene. To do this, I would have to get the parts of the scene that have been rendered so far, and use it as the texure for something on the users's screen.
+
+A queue of subdivisions that need to be rendered would decouple the number of threads with the number of subdivisions, as the threads could just work their way through the queue, rendering a new subdivision when they're done. Other improvements could be made to increase the efficiency of each thread.
+
+I at least plant to shift part of the work onto the GPU, so I'll need to find out how to communicate with the GPU for more than just OpenGL calls, like how to write programs, delegate tasks, generate threads, transfer data, and potentially actually trace rays on the GPU.
+
+Currently, the selection of primitives that I can add to the scene without resorting to triangular meshes is tiny, and triangular meshes add a lot of time to the render process, so to expand the range of primitives as well as speed up the rendering process, I can add more primitives that I can implicitly collide against, as well as implement the slab method for box collision. I can also add CSG's to increase the complexity of the shapes I can make using existing primitives and avoiding
+meshes as well.
+
+Of course, ew commands will have to be added to the scene interpreter to accommadate for these new features, like the new primitives, and the new CSG combination nodes.
+
+
+
+Objectives
+
+Better multithreading, for faster rendering and better use of resources
+
+Realtime updating and display of progress, so better feedback and progress estimates
+
+Jittery supersampling for smoother and less predictable edges
+
+Reflection rays bouncing off of reflective materials
+
+Refraction rays through translucent materials
+
+First hit acceleration, to speed up primary rays
+
+Texture mapping for easier modelling and prettier objects
+
+More primitives to increase object range while not adding time to render meshes
+
+Phong illumination for smoothing lighting across meshes
+
+CSG for larger variety range without needing meshes
+
+Hardware Acceleration / CUDA
+
+For A4, I implemented non-jittered supersampling.
