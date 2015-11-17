@@ -4,6 +4,7 @@ using namespace std;
 
 
 BlockList::BlockList(int h, int w, int subdivisions){
+    lastProgress = 0;
     int xPerSubdivision = w / subdivisions, yPerSubdivision = h / subdivisions;
 
     int hcap = h/2 + h % 2;
@@ -55,5 +56,14 @@ Block BlockList::getBlock(){
 
 void BlockList::doneRow(){
     squareRowsDone++;
-    cout << 100 * ((float)squareRowsDone) / (float)squareRowsNeeded << "%" << endl;
+
+}
+
+void BlockList::outputProgress(){
+    float progress = 100 * ((float)squareRowsDone) / (float)squareRowsNeeded;
+    cout << progress << "%" << endl;
+    if ( progress - lastProgress > 0.1){
+        lastProgress = progress;
+
+    }
 }

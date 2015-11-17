@@ -11,7 +11,7 @@ struct Block{
 class BlockList{
     std::atomic_uint squareRowsDone;
     unsigned int squareRowsNeeded;
-
+    float lastProgress;
     std::mutex lk;
     std::list<Block> blockList;
 
@@ -19,5 +19,6 @@ public:
     BlockList(int h, int w, int subDivisions);
     Block getBlock();
     void doneRow();
-
+    void outputProgress();
+    bool isAlmostDone(){return blockList.empty();}
 };

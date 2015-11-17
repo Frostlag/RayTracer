@@ -233,10 +233,16 @@ void A4_Render(
 	//
 	//
 	// }
+
+	while(!blockList->isAlmostDone()){
+
+		blockList->outputProgress();
+		this_thread::sleep_for(std::chrono::milliseconds(500));
+	}
 	for(int i = 0; i < threadvector.size(); i++){
 		threadvector[i]->join();
-
 		delete threadvector[i];
+
 	}
 	delete blockList;
 }
