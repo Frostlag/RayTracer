@@ -70,6 +70,7 @@ OBJECTS := \
 	$(OBJDIR)/JointNode.o \
 	$(OBJDIR)/Light.o \
 	$(OBJDIR)/A5.o \
+	$(OBJDIR)/Window.o \
 	$(OBJDIR)/Main.o \
 	$(OBJDIR)/Material.o \
 	$(OBJDIR)/Mesh.o \
@@ -154,6 +155,9 @@ $(OBJDIR)/Light.o: ../Light.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/A5.o: ../A5.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/Window.o: ../Window.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/Main.o: ../Main.cpp

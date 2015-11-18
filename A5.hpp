@@ -7,7 +7,9 @@
 #include "Image.hpp"
 #include "Primitive.hpp"
 
-void A4_Render(
+
+
+void A5_Render(
 		// What to render
 		SceneNode * root,
 

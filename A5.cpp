@@ -4,6 +4,7 @@
 #include "A5.hpp"
 #include "GeometryNode.hpp"
 #include "BlockList.hpp"
+#include "Window.hpp"
 using namespace std;
 using namespace glm;
 
@@ -11,7 +12,6 @@ extern int subdivisions;
 extern int threads;
 bool super = false;
 int supersub = 4;
-volatile unsigned int squareRowsDone = 0;
 BlockList *blockList;
 PhongMaterial defaultMat(vec3(0.2,0.2,0.2),vec3(0.1,0.1,0.1),40);
 
@@ -24,7 +24,7 @@ vec3 generateBG(int x, int y, int width, int height){
 	return vec3(0,0,ret-(int)ret);
 }
 
-void A4_Render_Thread(
+void A5_Render_Thread(
 	// What to render
 	SceneNode * root,
 	Image * image,
@@ -91,15 +91,6 @@ void A4_Render_Thread(
 					(*image)(px,h-py-1,0) = colour.x;
 					(*image)(px,h-py-1,1) = colour.y;
 					(*image)(px,h-py-1,2) = colour.z;
-
-					// Red: increasing from top to bottom
-					//image(px, py, 0) = (double)(y+h/2) / h;
-					// Green: increasing from left to right
-					//image(px, py, 1) = (double)(x+w/2) / w;
-					// Blue: in lower-left and upper-right corners
-					//image(px, py, 2) = (((y+h/2) < h/2 && (x+w/2) < w/2)
-					//		|| ((y+h/2) >= h/2 && (x+w/2) >= w/2)) ? 1.0 : 0.0;
-					//cout << px << endl;
 				}
 				blockList->doneRow();
 
@@ -110,14 +101,9 @@ void A4_Render_Thread(
 		cout << msg << endl;
 	}
 
-
-
-
-
-
 }
 
-void A4_Render(
+void A5_Render(
 		// What to render
 		SceneNode * root,
 
@@ -134,40 +120,20 @@ void A4_Render(
 		const glm::vec3 & ambient,
 		const std::list<Light *> & lights
 ) {
-	// Fill in raytracing code here...
-
-	std::cout << "Calling A4_Render(\n" <<
-		"\t" << *root <<
-		"\t" << "Image(width:" << image.width() << ", height:" << image.height() << ")\n"
-		"\t" << "eye:  " << glm::to_string(eye) << std::endl <<
-		"\t" << "view: " << glm::to_string(view) << std::endl <<
-		"\t" << "up:   " << glm::to_string(up) << std::endl <<
-		"\t" << "fovy: " << fovy << std::endl <<
-		"\t" << "ambient: " << glm::to_string(ambient) << std::endl <<
-		"\t" << "lights{" << std::endl;
-
-	for(const Light * light : lights) {
-		std::cout << "\t\t" <<  *light << std::endl;
-	}
-	std::cout << "\t}" << std::endl;
-	std:: cout <<")" << std::endl;
-
 	double aspect;
 	aspect = (float)image.width() / (float)image.height();
 	float n = (image.height() / 2) / tan(radians((float)fovy/2));
 	float gridHeight = image.height() / n;
 	float gridWidth = image.width() / n;
-	std::cout << "aspect: " << aspect << std::endl;
-	std::cout << "n: " << n << std::endl;
-	std::cout << "H,W: " << gridHeight << " " << gridWidth << std::endl;
-	std::cout << "h,w: " << image.height() << " " << image.width() << std::endl;
+
 	vec3 u = (normalize(up * gridHeight)) / image.height();
 	vec3 r = (normalize(cross(up,vec3(0,0,n)) * gridWidth) / image.width());
-	cout << "u: " << to_string(u) << endl;
-	cout << "r: " << to_string(r) << endl;
+
 
 	int h = image.height();
 	int w = image.width();
+
+	Window window(h, w);
 
 	mat4 V = lookAt(eye, view, up);
 	mat4 invV = inverse(V);
@@ -191,54 +157,17 @@ void A4_Render(
 
 	vector<thread*> threadvector;
 	for (int i = 0; i < threads; i++){
-		thread* temp = new thread(A4_Render_Thread, root, &image, eye, view, up, fovy, ambient, lights, E, baseZ, u, r, invV, blockList);
+		thread* temp = new thread(A5_Render_Thread, root, &image, eye, view, up, fovy, ambient, lights, E, baseZ, u, r, invV, blockList);
 		threadvector.push_back(temp);
 	}
-
 	cout << "Threads: " << threadvector.size() << endl;
 
-
-	// Single Threaded
-	// float lastPer = 0;
-	// for (int y = -h/2, py = 0 ; y < hcap; ++y, ++py) {
-	//
-	// 	for (int x = -w/2, px = 0; x < wcap; ++x, ++px) {
-	// 		vec3 pixel =normalize(baseZ + u * y + r * x);
-	// 		vec4 l = invV * vec4(pixel, 0);
-	// 		// cout << "pixel: " << to_string(pixel) << endl;
-	// 		// cout << "l: "<< to_string(l) << endl;
-	// 		CollisionInfo collisionInfo = traverseScene(root, E, l, mat4());
-	// 		vec3 colour;
-	// 		if (collisionInfo.isValid){
-	// 			colour = calculateColour(root, lights, ambient, collisionInfo, E, l);
-	// 		}else{
-	// 			colour = generateBG(px, h-py-1, w, h);
-	// 		}
-	// 		image(px,h-py-1,0) = colour.x;
-	// 		image(px,h-py-1,1) = colour.y;
-	// 		image(px,h-py-1,2) = colour.z;
-	//
-	// 		// Red: increasing from top to bottom
-	// 		//image(px, py, 0) = (double)(y+h/2) / h;
-	// 		// Green: increasing from left to right
-	// 		//image(px, py, 1) = (double)(x+w/2) / w;
-	// 		// Blue: in lower-left and upper-right corners
-	// 		//image(px, py, 2) = (((y+h/2) < h/2 && (x+w/2) < w/2)
-	// 		//		|| ((y+h/2) >= h/2 && (x+w/2) >= w/2)) ? 1.0 : 0.0;
-	// 	}
-	// 	if ( (float)py / h * 100 - lastPer > 1){
-	// 		cout << (float)py / h * 100 << "% done" << endl;
-	// 		lastPer = (float)py / h * 100;
-	// 	}
-	//
-	//
-	// }
-
 	while(!blockList->isAlmostDone()){
-
 		blockList->outputProgress();
+		window.draw();
 		this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
+
 	for(int i = 0; i < threadvector.size(); i++){
 		threadvector[i]->join();
 		delete threadvector[i];
