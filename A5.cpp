@@ -78,7 +78,9 @@ void A5_Render(
 	cout << "Threads: " << threadvector.size() << endl;
 
 	while(!window.isClosed()){
-		blockList->outputProgress();
+		if (!RenderThread::WorkingThreads.empty()){
+			blockList->outputProgress();
+		}
 		window.tick();
 		this_thread::sleep_for(std::chrono::milliseconds(500));
 	}

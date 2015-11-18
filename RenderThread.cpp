@@ -13,18 +13,19 @@ extern int supersub;
 extern PhongMaterial defaultMat;
 
 std::list<RenderThread*> RenderThread::Threads;
+std::list<RenderThread*> RenderThread::WorkingThreads;
 
 RenderThread::RenderThread(SceneNode * root, Image * image, const glm::vec3 eye, const glm::vec3 view, const glm::vec3 up, double fovy, glm::vec3 ambient, const std::list<Light *> lights,
     glm::vec4 E, glm::vec3 baseZ, glm::vec3 u, glm::vec3 r, glm::mat4 invV): root(root), image(image), eye(eye), view(view), up(up), fovy(fovy), ambient(ambient), lights(lights),E(E),
     baseZ(baseZ), u(u), r(r), invV(invV){
     RenderThread::Threads.push_back(this);
+    RenderThread::WorkingThreads.push_back(this);
 
     thethread = thread([this]{this->main();});
 }
 RenderThread::~RenderThread(){
 
     thethread.join();
-    Threads.remove(this);
 }
 
 CollisionInfo traverseScene(SceneNode * root, vec4 E, vec4 P, mat4 M){
@@ -156,6 +157,9 @@ void RenderThread::main(){
                     (*image)(px,h-py-1,0) = colour.x;
                     (*image)(px,h-py-1,1) = colour.y;
                     (*image)(px,h-py-1,2) = colour.z;
+                    lk.lock();
+                    changes.push_back(Changed(px,h-py-1));
+                    lk.unlock();
                 }
                 BlockList::instance->doneRow();
 
@@ -165,7 +169,16 @@ void RenderThread::main(){
     }catch(string msg){
         cout << msg << endl;
     }
+    WorkingThreads.remove(this);
     done = true;
+}
+
+list<Changed> RenderThread::getChanges(){
+    lk.lock();
+    list<Changed> ret = changes;
+    changes.clear();
+    lk.unlock();
+    return ret;
 }
 
 vec3 RenderThread::generateBG(int x, int y, int width, int height){

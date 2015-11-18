@@ -1,7 +1,7 @@
 #include <string>
 #include <iostream>
 #include "Window.hpp"
-
+#include "RenderThread.hpp"
 #include "cs488-framework/GlErrorCheck.hpp"
 
 
@@ -86,11 +86,16 @@ void Window::tick(){
 
 void Window::changeTexture(){
 
-    list<Image::Changed> changes = image.getChanged();
-    for (Image::Changed change : changes){
+    list<Changed> changes;
+    for (RenderThread *renderThread: RenderThread::Threads){
+        changes.splice(changes.end(), renderThread->getChanges());
+    }
 
-        double newcomponent = image(change.x, change.y, change.i, 1);
-        data[3 * (w * change.y + change.x) + change.i] = (unsigned char)(newcomponent * 255);
+    for (Changed change : changes){
+        for (int i = 0; i < 3; i++){
+            double newcomponent = image(change.x, change.y, i, 1);
+            data[3 * (w * change.y + change.x) + i] = (unsigned char)(newcomponent * 255);
+        }
         //cout << 3 * (w * change.y + change.x) + change.i << " " << (int)(newcomponent * 255) << endl;
     }
 

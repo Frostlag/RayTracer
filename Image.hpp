@@ -48,18 +48,9 @@ public:
 	const double * data() const;
 	double * data();
 
-	struct Changed{
-		uint x, y, i;
-		Changed(uint x, uint y, uint i):x(x), y(y), i(i){}
-	};
-
-	std::mutex lk;
-	std::list<Changed> getChanged();
-
 private:
 	uint m_width;
 	uint m_height;
 	double * m_data;
-	std::list<Changed> changedPixels;
 	static const uint m_colorComponents;
 };

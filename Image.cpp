@@ -85,18 +85,7 @@ double Image::operator()(uint x, uint y, uint i, int test) const
 //---------------------------------------------------------------------------------------
 double & Image::operator()(uint x, uint y, uint i)
 {
-  lk.lock();
-  changedPixels.push_back(Changed(x,y,i));
-  lk.unlock();
   return m_data[m_colorComponents * (m_width * y + x) + i];
-}
-
-std::list<Image::Changed> Image::getChanged(){
-    lk.lock();
-    std::list<Image::Changed> ret = changedPixels;
-    changedPixels.clear();
-    lk.unlock();
-    return ret;
 }
 
 //---------------------------------------------------------------------------------------
