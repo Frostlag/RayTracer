@@ -79,6 +79,7 @@ OBJECTS := \
 	$(OBJDIR)/Primitive.o \
 	$(OBJDIR)/scene_lua.o \
 	$(OBJDIR)/SceneNode.o \
+	$(OBJDIR)/RenderThread.o \
 
 RESOURCES := \
 
@@ -182,6 +183,9 @@ $(OBJDIR)/scene_lua.o: ../scene_lua.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/SceneNode.o: ../SceneNode.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/RenderThread.o: ../RenderThread.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 

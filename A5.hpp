@@ -30,5 +30,3 @@ void A5_Render(
 CollisionInfo traverseScene(SceneNode * root, glm::vec4 E, glm::vec4 P, glm::mat4 M);
 
 glm::vec3 calculateColour(SceneNode* root, const std::list<Light *> & lights, const glm::vec3 & ambient, CollisionInfo collisionInfo, glm::vec4 E, glm::vec4 P);
-
-glm::vec3 generateBG(int x, int y);

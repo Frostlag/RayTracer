@@ -2,8 +2,11 @@
 #include <iostream>
 using namespace std;
 
+BlockList* BlockList::instance;
 
 BlockList::BlockList(int h, int w, int subdivisions){
+    if (BlockList::instance == NULL)
+        BlockList::instance = this;
     lastProgress = 0;
     int xPerSubdivision = w / subdivisions, yPerSubdivision = h / subdivisions;
 

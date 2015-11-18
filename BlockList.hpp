@@ -16,9 +16,10 @@ class BlockList{
     std::list<Block> blockList;
 
 public:
+    static BlockList* instance;
     BlockList(int h, int w, int subDivisions);
     Block getBlock();
     void doneRow();
     void outputProgress();
-    bool isAlmostDone(){return blockList.empty();}
+
 };

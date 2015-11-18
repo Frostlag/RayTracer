@@ -5,6 +5,7 @@
 #include "GeometryNode.hpp"
 #include "BlockList.hpp"
 #include "Window.hpp"
+#include "RenderThread.hpp"
 using namespace std;
 using namespace glm;
 
@@ -15,93 +16,6 @@ int supersub = 4;
 BlockList *blockList;
 PhongMaterial defaultMat(vec3(0.2,0.2,0.2),vec3(0.1,0.1,0.1),40);
 
-
-vec3 generateBG(int x, int y, int width, int height){
-	//return vec3(0);
-	int repeatTimes = 5;
-	float distFromCenter = sqrt(pow(x-width/2,2) + pow(y-height/2,2));
-	float ret = distFromCenter/glm::min(height,width)*repeatTimes * 2;
-	return vec3(0,0,ret-(int)ret);
-}
-
-void A5_Render_Thread(
-	// What to render
-	SceneNode * root,
-	Image * image,
-	const glm::vec3 eye,
-	const glm::vec3 view,
-	const glm::vec3 up,
-	double fovy,
-	// Lighting parameters
-	const glm::vec3 ambient,
-	const std::list<Light *> lights,
-	vec4 E, vec3 baseZ, vec3 u, vec3 r, mat4 invV,
-	BlockList* blockList
-){
-	try{
-		vec3 uo4 = u / supersub, ro4 = r / supersub;
-		int h = image->height();
-		int w = image->width();
-		while(true){
-			Block block = blockList->getBlock();
-			int startX = block.startX, startY = block.startY, endX = block.endX, endY = block.endY, startPX = block.startPX, startPY = block.startPY;
-			for (int y = startY, py = startPY ; y < endY; ++y, ++py) {
-
-				for (int x = startX, px = startPX; x < endX; ++x, ++px) {
-					vec3 colour;
-					vec3 pixel = normalize(baseZ + u * y + r * x);
-					if (super){
-						if (supersub % 2 == 0){
-							pixel = pixel + (uo4 + ro4) * 0.5;
-						}
-						vector<vec3> colours;
-						for (int i = -supersub / 2; i < supersub / 2; i++ ){
-							for (int j = -supersub / 2; j < supersub / 2; j++){
-								vec4 l = invV * vec4(pixel + i * uo4 + j * ro4, 0);
-								CollisionInfo collisionInfo = traverseScene(root, E, l, mat4());
-								if (collisionInfo.isValid){
-									colours.push_back(calculateColour(root, lights, ambient, collisionInfo, E, l));
-								}else{
-									colours.push_back(generateBG(px, h-py-1, w, h));
-								}
-							}
-						}
-						vec3 sumcolours(0.0f);
-						for ( int i = 0; i < colours.size(); i++){
-
-							sumcolours += colours[i];
-						}
-
-						colour = sumcolours / ((float) colours.size());
-						//cout << to_string(colour) << endl;
-					}
-					else{
-						vec4 l = invV * vec4(pixel, 0);
-						// cout << "pixel: " << to_string(pixel) << endl;
-						// cout << "l: "<< to_string(l) << endl;
-						CollisionInfo collisionInfo = traverseScene(root, E, l, mat4());
-
-						if (collisionInfo.isValid){
-							colour = calculateColour(root, lights, ambient, collisionInfo, E, l);
-						}else{
-							colour = generateBG(px, h-py-1, w, h);
-						}
-					}
-					//cout << "Drawing to " << px << "," << h-py-1 << endl;
-					(*image)(px,h-py-1,0) = colour.x;
-					(*image)(px,h-py-1,1) = colour.y;
-					(*image)(px,h-py-1,2) = colour.z;
-				}
-				blockList->doneRow();
-
-			}
-
-		}
-	}catch(string msg){
-		cout << msg << endl;
-	}
-
-}
 
 void A5_Render(
 		// What to render
@@ -133,7 +47,7 @@ void A5_Render(
 	int h = image.height();
 	int w = image.width();
 
-	Window window(h, w);
+	Window window(h, w, image);
 
 	mat4 V = lookAt(eye, view, up);
 	mat4 invV = inverse(V);
@@ -155,100 +69,22 @@ void A5_Render(
 	blockList = new BlockList(h, w, subdivisions);
 	root->reboundVolume();
 
-	vector<thread*> threadvector;
+	vector<RenderThread*> threadvector;
 	for (int i = 0; i < threads; i++){
-		thread* temp = new thread(A5_Render_Thread, root, &image, eye, view, up, fovy, ambient, lights, E, baseZ, u, r, invV, blockList);
+		RenderThread* temp =  new RenderThread(root, &image, eye, view, up, fovy, ambient, lights, E, baseZ, u, r, invV);
+
 		threadvector.push_back(temp);
 	}
 	cout << "Threads: " << threadvector.size() << endl;
 
-	while(!blockList->isAlmostDone()){
+	while(!window.isClosed()){
 		blockList->outputProgress();
-		window.draw();
+		window.tick();
 		this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
 
 	for(int i = 0; i < threadvector.size(); i++){
-		threadvector[i]->join();
 		delete threadvector[i];
-
 	}
 	delete blockList;
-}
-
-
-
-
-CollisionInfo traverseScene(SceneNode * root, vec4 E, vec4 P, mat4 M){
-	CollisionInfo ret = CollisionInfo();
-#ifndef NOBOUNDING
-	if (!root->BoundingVolumeCollide(E, P, M).isValid)
-		return ret;
-#endif
-	if (root->m_nodeType == NodeType::GeometryNode){
-		GeometryNode* geometryNode = static_cast<GeometryNode*>(root);
-		ret = geometryNode->Collide(E, P, M);
-
-
-	}
-	for (SceneNode* children : root->children){
-		CollisionInfo temp = traverseScene(children, E, P, M * root->get_transform());
-		if (!temp.isValid) continue;
-		if (!ret.isValid)
-			ret = temp;
-		else if (ret.d > temp.d)
-			ret = temp;
-	}
-	return ret;
-}
-
-vec3 calculateColour(SceneNode * root, const list<Light *> & lights, const vec3 & ambient, CollisionInfo collisionInfo, vec4 E, vec4 P){
-	vec3 ret;
-
-	if (!collisionInfo.isValid)
-		return ret;
-
-	if (collisionInfo.mat == NULL)
-		collisionInfo.mat = &defaultMat;
-
-
-	auto attenuationConstant = [] (float r, double falloff[]){
-		float c1 = 1, c2 = 1, c3 = 1;
-		return 1/(falloff[0] + falloff[1] * r + falloff[2] * r * r);
-	};
-
-	ret = ambient * collisionInfo.mat->getKD();
-
-	for( Light * light : lights){
-		vec4 l = normalize(vec4(light->position,1) - collisionInfo.position);
-		vec4 myEye = collisionInfo.position + l * 1e-2;
-		CollisionInfo obstruction = traverseScene( root, myEye, l, mat4());
-		if (obstruction.isValid){
-			if ( length(obstruction.d * l) < length(light->position - vec3(collisionInfo.position))){
-				continue;
-			}
-
-		}
-		//cout << collisionInfo.node_name << " not obstructed" << endl;
-		vec4 v = normalize(-P);
-		float n_dot_l = glm::max(dot(collisionInfo.normal, l),0.0f);
-		vec3 lightColor = light->colour;
-		vec3 kd = collisionInfo.mat->getKD();
-		vec3 diffuse = kd * n_dot_l;
-
-		vec3 specular = vec3(0.0);
-
-		if (n_dot_l > 0){
-			vec4 h = (normalize(v + l));
-			float n_dot_h = glm::max(dot(collisionInfo.normal, h),0.0f);
-			specular = collisionInfo.mat->getKS() * pow(n_dot_h, collisionInfo.mat->getShininess());
-		}
-
-		ret += vec3(lightColor) * vec3(((diffuse + specular))) * attenuationConstant(length(vec4(light->position,0) - collisionInfo.position), light->falloff);
-	}
-		//cout << to_string((diffuse + specular)) << endl;
-	// if (collisionInfo.node_name == "plane"){
-	// 	cout << "Plane normal is " << to_string(collisionInfo.normal) << endl;
-	// }
-	return glm::min(ret,1.0f);
 }

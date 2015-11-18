@@ -49,7 +49,7 @@ Image::~Image()
 Image & Image::operator=(const Image& other)
 {
   delete [] m_data;
-  
+
   m_width = other.m_width;
   m_height = other.m_height;
   m_data = (other.m_data ? new double[m_width * m_height * m_colorComponents] : 0);
@@ -60,7 +60,7 @@ Image & Image::operator=(const Image& other)
                 m_width * m_height * m_colorComponents * sizeof(double)
     );
   }
-  
+
   return *this;
 }
 
@@ -77,7 +77,7 @@ uint Image::height() const
 }
 
 //---------------------------------------------------------------------------------------
-double Image::operator()(uint x, uint y, uint i) const
+double Image::operator()(uint x, uint y, uint i, int test) const
 {
   return m_data[m_colorComponents * (m_width * y + x) + i];
 }
@@ -85,7 +85,18 @@ double Image::operator()(uint x, uint y, uint i) const
 //---------------------------------------------------------------------------------------
 double & Image::operator()(uint x, uint y, uint i)
 {
+  lk.lock();
+  changedPixels.push_back(Changed(x,y,i));
+  lk.unlock();
   return m_data[m_colorComponents * (m_width * y + x) + i];
+}
+
+std::list<Image::Changed> Image::getChanged(){
+    lk.lock();
+    std::list<Image::Changed> ret = changedPixels;
+    changedPixels.clear();
+    lk.unlock();
+    return ret;
 }
 
 //---------------------------------------------------------------------------------------

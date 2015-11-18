@@ -1,7 +1,8 @@
 #pragma once
 
 #include <string>
-
+#include <list>
+#include <mutex>
 typedef unsigned int uint;
 
 /**
@@ -35,7 +36,7 @@ public:
 	uint height() const;
 
     // Retrieve a particular component from the image.
-	double operator()(uint x, uint y, uint i) const;
+	double operator()(uint x, uint y, uint i, int test) const;
 
 	// Retrieve a particular component from the image.
 	double & operator()(uint x, uint y, uint i);
@@ -47,10 +48,18 @@ public:
 	const double * data() const;
 	double * data();
 
+	struct Changed{
+		uint x, y, i;
+		Changed(uint x, uint y, uint i):x(x), y(y), i(i){}
+	};
+
+	std::mutex lk;
+	std::list<Changed> getChanged();
+
 private:
 	uint m_width;
 	uint m_height;
 	double * m_data;
-
+	std::list<Changed> changedPixels;
 	static const uint m_colorComponents;
 };

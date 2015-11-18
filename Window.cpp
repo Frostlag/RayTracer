@@ -1,11 +1,13 @@
 #include <string>
+#include <iostream>
 #include "Window.hpp"
+
 #include "cs488-framework/GlErrorCheck.hpp"
 
 
 using namespace std;
 
-Window::Window(int h, int w):h(h),w(w){
+Window::Window(int h, int w, Image& image):h(h),w(w),image(image){
     if (glfwInit() == GL_FALSE)
         throw string("Not able to create window");
 
@@ -28,12 +30,12 @@ Window::Window(int h, int w):h(h),w(w){
     m_shader.link();
 
     GLfloat vertex_buffer_data[] = {
-     -1.0f, -1.0f, 0.0f,
-     1.0f, -1.0f, 0.0f,
-     -1.0f,  1.0f, 0.0f,
-     -1.0f,  1.0f, 0.0f,
-     1.0f, -1.0f, 0.0f,
-     1.0f,  1.0f, 0.0f,
+     -1.0f, -1.0f,
+     1.0f, -1.0f,
+     -1.0f,  1.0f,
+     -1.0f,  1.0f,
+     1.0f, -1.0f,
+     1.0f,  1.0f,
     };
 
     CHECK_GL_ERRORS;
@@ -47,30 +49,71 @@ Window::Window(int h, int w):h(h),w(w){
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
     GLuint posAttrib = m_shader.getAttribLocation( "position" );
     glEnableVertexAttribArray( posAttrib );
-    glVertexAttribPointer( posAttrib, 3, GL_FLOAT, GL_FALSE, 0, nullptr );
+    glVertexAttribPointer( posAttrib, 2, GL_FLOAT, GL_FALSE, 0, nullptr );
     CHECK_GL_ERRORS;
 
-    unsigned char* data = new unsigned char [h*w*4];
-    for ( int i = 0; i < h * w * 4; i++){
-        data[i] = 0xFF;
+    data = new unsigned char [h*w*3];
+    for ( int i = 0; i < h * w * 3; i+=3){
+        data[i] = 0x00;
+        data[i + 1] = 0x00;
+        data[i + 2] = 0x00;
+
     }
     texId = m_shader.getUniformLocation("renderedTexture");
     glBindTexture(GL_TEXTURE_2D, texId);
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, w, h, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
     CHECK_GL_ERRORS;
 
-    delete [] data;
+    test = 0x00;
 
+    closed = false;
+}
+
+void Window::tick(){
+    if (closed)
+        return;
+    glfwPollEvents();
+    changeTexture();
+    draw();
+    if (glfwWindowShouldClose(window)){
+        closed = true;
+        glfwDestroyWindow(window);
+    }
+}
+
+void Window::changeTexture(){
+
+    list<Image::Changed> changes = image.getChanged();
+    for (Image::Changed change : changes){
+
+        double newcomponent = image(change.x, change.y, change.i, 1);
+        data[3 * (w * change.y + change.x) + change.i] = (unsigned char)(newcomponent * 255);
+        //cout << 3 * (w * change.y + change.x) + change.i << " " << (int)(newcomponent * 255) << endl;
+    }
+
+    texId = m_shader.getUniformLocation("renderedTexture");
+    glBindTexture(GL_TEXTURE_2D, texId);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    CHECK_GL_ERRORS;
 }
 
 void Window::draw(){
+    glfwPollEvents();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0,0,w,h);
+    CHECK_GL_ERRORS;
+
     m_shader.enable();
         glBindVertexArray(vertex_id);
         glDrawArrays(GL_TRIANGLES, 0, 2*3);
+        CHECK_GL_ERRORS;
     m_shader.disable();
+
     glfwSwapBuffers(window);
 }

@@ -2,7 +2,7 @@
 #include "cs488-framework/OpenGLImport.hpp"
 #include "cs488-framework/ShaderProgram.hpp"
 #include <GLFW/glfw3.h>
-
+#include "Image.hpp"
 
 class Window{
 
@@ -10,16 +10,22 @@ class Window{
     GLuint vertex_id;
     ShaderProgram m_shader;
     int h, w;
-    GLuint texId;
+    GLuint texId, texCordsId;
+    unsigned char* data;
+    char test;
+    bool closed;
+    Image& image;
 
+    void changeTexture();
 public:
-    Window(int h, int w);
+    Window(int h, int w, Image& image);
     ~Window(){
-        glfwDestroyWindow(window);
         glfwTerminate();
+        delete [] data;
     }
-
+    void tick();
     void draw();
+    bool isClosed(){return closed;}
 
 
 };
