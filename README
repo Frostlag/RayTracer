@@ -7,5 +7,7 @@ of the scene you're trying to render. And subdivisions is how many subdivisions
 you wish to divide the picture into. And threads is just how many threads the spawned
 to work on it.
 
+This was compiled and ran on gl29.
+
 Manual
 ------------------------------------------------------------------------
