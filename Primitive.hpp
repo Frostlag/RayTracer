@@ -60,6 +60,7 @@ public:
   {
   }
   virtual CollisionInfo Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
+  bool Bounds( glm::vec4 E,glm::vec4 P, glm::mat4 M );
   virtual ~NonhierBox();
 
   glm::vec3 getPos(){ return m_pos; }
@@ -69,4 +70,21 @@ public:
 private:
   glm::vec3 m_pos;
   double m_size;
+};
+
+class Cone : public Primitive {
+public:
+  virtual CollisionInfo Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
+  virtual ~Cone();
+  virtual std::pair<glm::vec4,glm::vec4> getBounds();
+
+};
+
+class Cylinder: public Primitive {
+public:
+  virtual CollisionInfo Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
+  virtual ~Cylinder();
+  virtual std::pair<glm::vec4,glm::vec4> getBounds();
+
+
 };

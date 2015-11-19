@@ -52,9 +52,9 @@ public:
 	NodeType m_nodeType;
 	std::string m_name;
 	unsigned int m_nodeId;
-	Primitive* boundingVolume;
+	NonhierBox* boundingVolume;
 
-	CollisionInfo BoundingVolumeCollide(glm::vec4 E, glm::vec4 P, glm::mat4 M);
+	bool BoundingVolumeCollide(glm::vec4 E, glm::vec4 P, glm::mat4 M);
 private:
 	// The number of SceneNode instances.
 	static unsigned int nodeInstanceCount;

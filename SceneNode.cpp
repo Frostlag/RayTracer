@@ -156,17 +156,17 @@ void SceneNode::reboundVolume(){
     for( SceneNode * child : children ){
         child->reboundVolume();
 		if (child->boundingVolume == NULL) continue;
-        
+
         mat4 ct = child->get_transform();
         vec4 point1, point2, center;
 		NonhierBox* cbv = static_cast<NonhierBox*>(child->boundingVolume);
         float radius = cbv->getSize();
         radius = length(ct * vec4( radius, radius, radius, 0));
         center = ct * vec4(cbv->getPos(),1);
-        
+
         point1 = center - vec4(radius,radius,radius,0);
         point2 = center + vec4(radius,radius,radius,0);
-        
+
 		if (!init){
             min = glm::min(point1, point2);
             max = glm::max(point1, point2);
@@ -189,13 +189,8 @@ void SceneNode::reboundVolume(){
 	}
 }
 
-CollisionInfo SceneNode::BoundingVolumeCollide(vec4 E, vec4 P, mat4 M){
-	if (boundingVolume == NULL) return CollisionInfo();
-	CollisionInfo collisionInfo = boundingVolume->Collide(E, P, M * get_transform());
-	if (collisionInfo.isValid){
-		collisionInfo.node_name = m_name;
-		//cout << "collide on " << m_name << " at " << to_string(collisionInfo.position) << " with d=" << collisionInfo.d << endl;
-		//cout << "normal at collision point is " << to_string(collisionInfo.normal) << endl;
-	}
-	return collisionInfo;
+bool SceneNode::BoundingVolumeCollide(vec4 E, vec4 P, mat4 M){
+	if (boundingVolume == NULL) return false;
+	return boundingVolume->Bounds(E, P, M * get_transform());
+
 }

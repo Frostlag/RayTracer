@@ -30,10 +30,10 @@ RenderThread::~RenderThread(){
 
 CollisionInfo traverseScene(SceneNode * root, vec4 E, vec4 P, mat4 M){
 	CollisionInfo ret = CollisionInfo();
-#ifndef NOBOUNDING
-	if (!root->BoundingVolumeCollide(E, P, M).isValid)
-		return ret;
-#endif
+// #ifndef NOBOUNDING
+// 	if (!root->BoundingVolumeCollide(E, P, M))
+// 		return ret;
+// #endif
 	if (root->m_nodeType == NodeType::GeometryNode){
 		GeometryNode* geometryNode = static_cast<GeometryNode*>(root);
 		ret = geometryNode->Collide(E, P, M);

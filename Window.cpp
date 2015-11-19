@@ -78,7 +78,7 @@ void Window::tick(){
     glfwPollEvents();
     changeTexture();
     draw();
-    if (glfwWindowShouldClose(window)){
+    if (glfwWindowShouldClose(window) || RenderThread::WorkingThreads.empty()){
         closed = true;
         glfwDestroyWindow(window);
     }
