@@ -11,6 +11,7 @@ using namespace glm;
 
 extern int subdivisions;
 extern int threads;
+extern int cwindow;
 bool super = false;
 int supersub = 4;
 BlockList *blockList;
@@ -47,7 +48,11 @@ void A5_Render(
 	int h = image.height();
 	int w = image.width();
 
-	Window window(h, w, image);
+	Window *window;
+
+	if (cwindow > 0){
+		window = new Window(h, w, image);
+	}
 
 	mat4 V = lookAt(eye, view, up);
 	mat4 invV = inverse(V);
@@ -77,11 +82,11 @@ void A5_Render(
 	}
 	cout << "Threads: " << threadvector.size() << endl;
 
-	while(!window.isClosed()){
+	while(!window->isClosed() && cwindow >= 1){
 		if (!RenderThread::WorkingThreads.empty()){
 			blockList->outputProgress();
 		}
-		window.tick();
+		window->tick();
 		this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
 
@@ -89,4 +94,8 @@ void A5_Render(
 		delete threadvector[i];
 	}
 	delete blockList;
+	if (cwindow > 0){
+		delete window;
+	}
+
 }

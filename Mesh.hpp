@@ -25,7 +25,7 @@ struct Triangle
 class Mesh : public Primitive {
 public:
   Mesh( const std::string& fname );
-  virtual CollisionInfo Collide( glm::vec4 E, glm::vec4 P, glm::mat4 M);
+  virtual PrimitiveCollisions Collide( glm::vec4 E, glm::vec4 P, glm::mat4 M);
 private:
 	std::vector<glm::vec3> m_vertices;
 	std::vector<Triangle> m_faces;

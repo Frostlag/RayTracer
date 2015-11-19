@@ -80,6 +80,7 @@ OBJECTS := \
 	$(OBJDIR)/scene_lua.o \
 	$(OBJDIR)/SceneNode.o \
 	$(OBJDIR)/RenderThread.o \
+	$(OBJDIR)/Collision.o \
 
 RESOURCES := \
 
@@ -186,6 +187,9 @@ $(OBJDIR)/SceneNode.o: ../SceneNode.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/RenderThread.o: ../RenderThread.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/Collision.o: ../Collision.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 

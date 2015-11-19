@@ -30,15 +30,15 @@ void GeometryNode::setMaterial( Material *mat )
 }
 
 
-CollisionInfo GeometryNode::Collide(vec4 E, vec4 P, mat4 M){
-	if (m_primitive == NULL) return CollisionInfo();
-	CollisionInfo collisionInfo = m_primitive->Collide(E, P, M * get_transform());
-	if (collisionInfo.isValid){
-		collisionInfo.mat = static_cast<PhongMaterial*>(m_material);
+PrimitiveCollisions GeometryNode::Collide(vec4 E, vec4 P, mat4 M){
+	if (m_primitive == NULL) return PrimitiveCollisions();
+	PrimitiveCollisions primitiveCollisions = m_primitive->Collide(E, P, M * get_transform());
+	if (!primitiveCollisions.isEmpty()){
+		primitiveCollisions.mat = static_cast<PhongMaterial*>(m_material);
 
-		collisionInfo.node_name = m_name;
+		primitiveCollisions.node_name = m_name;
 		//cout << "collide on " << m_name << " at " << to_string(collisionInfo.position) << " with d=" << collisionInfo.d << endl;
 		//cout << "normal at collision point is " << to_string(collisionInfo.normal) << endl;
 	}
-	return collisionInfo;
+	return primitiveCollisions;
 }

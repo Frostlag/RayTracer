@@ -50,8 +50,8 @@ std::ostream& operator<<(std::ostream& out, const Mesh& mesh)
 }
 
 
-CollisionInfo Mesh::Collide(vec4 E, vec4 P, glm::mat4 M){
-    CollisionInfo ret;
+PrimitiveCollisions Mesh::Collide(vec4 E, vec4 P, glm::mat4 M){
+    PrimitiveCollisions ret;
 	mat4 invM = inverse(M);
 	vec4 invE = invM * E;
 	vec4 invP = invM * P;
@@ -83,15 +83,8 @@ CollisionInfo Mesh::Collide(vec4 E, vec4 P, glm::mat4 M){
 		if (!isIn)
 			continue;
 		//std::cout << "IN FACE" << std::endl;
-		if (!ret.isValid || ret.d > d){
-			//std::cout << "On top IN FACE" << std::endl;
-			ret.isValid = true;
-			ret.d = d;
-			ret.position = E + d * P;
 
-			ret.normal = normalize(vec4(transpose(inverse(mat3(M))) * normal, 0));
-			//cout << to_string(potentialPoint) << endl;
-		}
+		ret.addCollision(CollisionInfo(d, E + d * P, normalize(vec4(transpose(inverse(mat3(M))) * normal, 0))));
 	}
 	return ret;
 }

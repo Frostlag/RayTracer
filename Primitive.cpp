@@ -6,14 +6,12 @@
 using namespace std;
 using namespace glm;
 
-CollisionInfo::CollisionInfo():isValid(false),mat(NULL){}
-
 Primitive::~Primitive()
 {
 }
 
-CollisionInfo Sphere::Collide(  vec4 E, vec4 P, glm::mat4 M ){
-    CollisionInfo ret;
+PrimitiveCollisions Sphere::Collide(  vec4 E, vec4 P, glm::mat4 M ){
+    PrimitiveCollisions ret;
     vec4 center = vec4(0,0,0,1);
     mat4 invM = inverse(M);
     vec4 invE = invM * E;
@@ -30,73 +28,11 @@ CollisionInfo Sphere::Collide(  vec4 E, vec4 P, glm::mat4 M ){
 	if (result < 1)
 		return ret;
 
-	double t;
-	if (result == 1){
-		if (roots[0] < 0)
-			return ret;
-		t = roots[0];
-	}else{
-		int i = 3;
-		if (roots[0] < 0)
-			i -= 1;
-		if (roots[1] < 0)
-			i -= 2;
-
-		if (i == 3){
-			t = glm::min(roots[0],roots[1]);
-		}else if(i == 2){
-			t = roots[1];
-		}else if(i == 1){
-			t = roots[0];
-		}else if(i == 0)
-			return ret;
-	}
-
-	float d = t;
-	ret.isValid = true;
-	ret.position = E + t * P;
-	ret.d = t;
-    ret.normal = normalize(vec4(transpose(inverse(mat3(M))) * vec3(invE + ret.d * invP), 0));
+    for (int i = 0; i < result; i++){
+        ret.addCollision(CollisionInfo(roots[i], E + roots[i] * P, normalize(vec4(transpose(inverse(mat3(M))) * vec3(invE + roots[i] * invP), 0))));
+    }
 
 	return ret;
-
-    float discriminant = (pow(dot(invP , diff),2) - invPsq * (dot(diff,diff) - 1));
-
-
-
-
-    if (discriminant < 0){
-        return ret;
-    }
-
-    float otherPart = - dot(invP,diff);
-    //cout << "otherPart: " << otherPart << endl;
-    //cout << "sqrt discriminant: " << sqrt(discriminant) << endl;
-
-    float d1 = (otherPart + sqrt(discriminant)) / invPsq;
-    float d2 = (otherPart - sqrt(discriminant)) / invPsq;
-    if (d2 > d1 || d2 < 0){
-        if (d1 < 0) return ret;
-        ret.isValid = true;
-        ret.position = E + (d1 * P);
-        ret.d = d1;
-    }else if (d2 > 0){
-        ret.isValid = true;
-        ret.position = E + (d2 * P);
-        ret.d = d2;
-    }
-
-    ret.normal = normalize(vec4(transpose(inverse(mat3(M))) * vec3(invE + ret.d * invP), 0));
-    //cout << ret.d << endl;
-    // cout << "Two hits" << endl;
-
-
-
-    // cout << pow(dot(P ,(E - center)),2) << endl;
-    // cout << pow(length(P - center),2) << endl;
-    // cout << m_radius * m_radius << endl;
-
-    return ret;
 }
 
 pair<glm::vec4,glm::vec4> Sphere::getBounds(){
@@ -108,8 +44,8 @@ Sphere::~Sphere()
 {
 }
 
-CollisionInfo Cube::Collide(  vec4 E, vec4 P, glm::mat4 M ){
-    CollisionInfo ret;
+PrimitiveCollisions Cube::Collide(  vec4 E, vec4 P, glm::mat4 M ){
+    PrimitiveCollisions ret;
     mat4 invM = inverse(M);
     vec4 invE = invM * E;
     vec4 invP = invM * P;
@@ -165,7 +101,6 @@ CollisionInfo Cube::Collide(  vec4 E, vec4 P, glm::mat4 M ){
             {vec3(0,0,-1),vec3(0,1,0),vec3(0,0,1),vec3(0,-1,0)}}
     };
 
-
     for( int i  = 0; i < 6; i++){
         float d = dot(vec4(planeInfo[i].first,1) -  invE, vec4(planeInfo[i].second,0)) / dot(invP, vec4(planeInfo[i].second,0));
         if (d <= 0) continue;
@@ -183,16 +118,9 @@ CollisionInfo Cube::Collide(  vec4 E, vec4 P, glm::mat4 M ){
         if (!isIn)
             continue;
 
-        if (!ret.isValid || ret.d > d){
-            ret.isValid = true;
-            ret.position = M * potentialPoint;
-            ret.d = d;
-            ret.normal = normalize(vec4(transpose(inverse(mat3(M))) * planeInfo[i].second, 0));
-            //cout << to_string(ret.normal) << endl;
-            //cout << "Cube" << to_string(potentialPoint) << endl;
-        }
+        ret.addCollision(CollisionInfo(d, M * potentialPoint, normalize(vec4(transpose(inverse(mat3(M))) * planeInfo[i].second, 0))));
     }
-    //if (ret.isValid) cout << to_string(E + ret.d * P) << endl;
+
     return ret;
 }
 
@@ -205,8 +133,8 @@ Cube::~Cube()
 {
 }
 
-CollisionInfo NonhierSphere::Collide(  vec4 E, vec4 P, glm::mat4 M ){
-    CollisionInfo ret;
+PrimitiveCollisions NonhierSphere::Collide(  vec4 E, vec4 P, glm::mat4 M ){
+    PrimitiveCollisions ret;
     vec4 center = vec4(m_pos,1);
     mat4 invM = inverse(M);
     vec4 invE = invM * E;
@@ -224,35 +152,11 @@ CollisionInfo NonhierSphere::Collide(  vec4 E, vec4 P, glm::mat4 M ){
 	if (result < 1)
 		return ret;
 
-	double t;
-	if (result == 1){
-		if (roots[0] < 0)
-			return ret;
-		t = roots[0];
-	}else{
-		int i = 3;
-		if (roots[0] < 0)
-			i -= 1;
-		if (roots[1] < 0)
-			i -= 2;
+    for (int i = 0; i < result; i++){
+        ret.addCollision(CollisionInfo(roots[i], E + roots[i] * P, normalize(vec4(transpose(inverse(mat3(M))) * (vec3(invE + roots[i] * invP) - m_pos), 0))));
+    }
 
-		if (i == 3){
-			t = glm::min(roots[0],roots[1]);
-		}else if(i == 2){
-			t = roots[1];
-		}else if(i == 1){
-			t = roots[0];
-		}else if(i == 0)
-			return ret;
-	}
-
-	float d = t;
-	ret.isValid = true;
-	ret.position = E + t * P;
-	ret.d = d;
-    ret.normal = normalize(vec4(transpose(inverse(mat3(M))) * (vec3(invE + ret.d * invP) - m_pos), 0));
-
-	return ret;
+    return ret;
 
 }
 
@@ -264,9 +168,8 @@ NonhierSphere::~NonhierSphere()
 {
 }
 
-CollisionInfo NonhierBox::Collide(vec4 E, vec4 P, glm::mat4 M){
-
-    CollisionInfo ret;
+PrimitiveCollisions NonhierBox::Collide(vec4 E, vec4 P, glm::mat4 M){
+    PrimitiveCollisions ret;
     mat4 invM = inverse(M);
     vec4 invE = invM * E;
     vec4 invP = invM * P;
@@ -338,21 +241,14 @@ CollisionInfo NonhierBox::Collide(vec4 E, vec4 P, glm::mat4 M){
         if (!isIn)
             continue;
 
-        if (!ret.isValid || ret.d > d){
-            ret.isValid = true;
-            ret.position = M * potentialPoint;
-            ret.d = d;
-            ret.normal = normalize(vec4(transpose(inverse(mat3(M))) * planeInfo[i].second, 0));
-            //cout << "Cube" << to_string(potentialPoint) << endl;
-        }
+        ret.addCollision(CollisionInfo(d, M * potentialPoint, normalize(vec4(transpose(inverse(mat3(M))) * planeInfo[i].second, 0))));
     }
-    //if (ret.isValid) cout << to_string(E + ret.d * P) << endl;
+
     return ret;
 }
 
 bool NonhierBox::Bounds(vec4 E, vec4 P, glm::mat4 M){
-
-    CollisionInfo ret;
+    PrimitiveCollisions ret;
     mat4 invM = inverse(M);
     vec4 invE = invM * E;
     vec4 invP = invM * P;
@@ -391,8 +287,8 @@ NonhierBox::~NonhierBox()
 }
 
 
-CollisionInfo Cone::Collide(glm::vec4 E,glm::vec4 P, glm::mat4 M){
-    CollisionInfo ret;
+PrimitiveCollisions Cone::Collide(glm::vec4 E,glm::vec4 P, glm::mat4 M){
+    PrimitiveCollisions ret;
     mat4 invM = inverse(M);
     vec4 invE = invM * E;
     vec4 invP = invM * P;
@@ -408,35 +304,49 @@ CollisionInfo Cone::Collide(glm::vec4 E,glm::vec4 P, glm::mat4 M){
     if (result < 1)
         return ret;
 
-    double t;
-    if (result == 1){
-        if (roots[0] < 0)
-            return ret;
-        t = roots[0];
-    }else{
-        int i = 3;
-        if (roots[0] < 0)
-            i -= 1;
-        if (roots[1] < 0)
-            i -= 2;
+    for (int i = 0; i < result; i++){
+        vec4 ourPoint = (invE + roots[i] * invP);
+        if (ourPoint.y >= 0 && ourPoint.y <= 1 ){
+            ret.addCollision(CollisionInfo(roots[i], E + roots[i] * P, normalize(vec4(transpose(inverse(mat3(M))) * vec3(ourPoint.x, -1, ourPoint.z), 0))));
+        }
+    }
 
-        if (i == 3){
-            t = glm::min(roots[0],roots[1]);
-        }else if(i == 2){
-            t = roots[1];
-        }else if(i == 1){
-            t = roots[0];
-        }else if(i == 0)
-            return ret;
-    }
-    vec4 ourPoint = (invE + t * invP);
-    if (ourPoint.y >= 0 && ourPoint.y <= 1 ){
-        float d = t;
-        ret.isValid = true;
-        ret.position = E + t * P;
-        ret.d = d;
-        ret.normal = normalize(vec4(transpose(inverse(mat3(M))) * vec3(ourPoint.x, -1, ourPoint.z), 0));
-    }
+    vec3 m_pos = vec3(0,1,0);
+    float ty1 = (m_pos.y - invE.y)/invP.y;
+    vec4 ourPoint = (invE + ty1 * invP);
+    cout << pow(ourPoint.x, 2) + pow(ourPoint.y, 2) << endl;
+    if (pow(ourPoint.x, 2) + pow(ourPoint.z, 2) <= 1)
+        ret.addCollision(CollisionInfo(ty1, E + ty1 * P, normalize(vec4(transpose(inverse(mat3(M))) * vec3(0, 1, 0), 0))));
+
+    // double t;
+    // if (result == 1){
+    //     if (roots[0] < 0)
+    //         return ret;
+    //     t = roots[0];
+    // }else{
+    //     int i = 3;
+    //     if (roots[0] < 0)
+    //         i -= 1;
+    //     if (roots[1] < 0)
+    //         i -= 2;
+    //
+    //     if (i == 3){
+    //         t = glm::min(roots[0],roots[1]);
+    //     }else if(i == 2){
+    //         t = roots[1];
+    //     }else if(i == 1){
+    //         t = roots[0];
+    //     }else if(i == 0)
+    //         return ret;
+    // }
+    // vec4 ourPoint = (invE + t * invP);
+    // if (ourPoint.y >= 0 && ourPoint.y <= 1 ){
+    //     float d = t;
+    //     ret.isValid = true;
+    //     ret.position = E + t * P;
+    //     ret.d = d;
+    //     ret.normal = normalize(vec4(transpose(inverse(mat3(M))) * vec3(ourPoint.x, -1, ourPoint.z), 0));
+    // }
 
 
 
@@ -452,8 +362,8 @@ Cone::~Cone(){
 }
 
 
-CollisionInfo Cylinder::Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M ){
-    CollisionInfo ret;
+PrimitiveCollisions Cylinder::Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M ){
+    PrimitiveCollisions ret;
     mat4 invM = inverse(M);
     vec4 invE = invM * E;
     vec4 invP = invM * P;
@@ -469,37 +379,25 @@ CollisionInfo Cylinder::Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M ){
     if (result < 1)
         return ret;
 
-    double t;
-    if (result == 1){
-        if (roots[0] < 0)
-            return ret;
-        t = roots[0];
-    }else{
-        int i = 3;
-        if (roots[0] < 0)
-            i -= 1;
-        if (roots[1] < 0)
-            i -= 2;
-
-        if (i == 3){
-            t = glm::min(roots[0],roots[1]);
-        }else if(i == 2){
-            t = roots[1];
-        }else if(i == 1){
-            t = roots[0];
-        }else if(i == 0)
-            return ret;
+    for (int i = 0; i < result; i++){
+        vec4 ourPoint = (invE + roots[i] * invP);
+        if (ourPoint.y >= -1 && ourPoint.y <= 1 ){
+            ret.addCollision(CollisionInfo(roots[i], E + roots[i] * P, normalize(vec4(transpose(inverse(mat3(M))) * vec3(ourPoint.x, 0, ourPoint.z), 0))));
+        }
     }
+    vec3 m_pos = vec3(0,1,0);
 
-    vec4 ourPoint = (invE + t * invP);
-    if (ourPoint.y >= -1 && ourPoint.y <= 1){
-        cout << ourPoint.y << endl;
-        float d = t;
-        ret.isValid = true;
-        ret.position = E + t * P;
-        ret.d = d;
-        ret.normal = normalize(vec4(transpose(inverse(mat3(M))) * vec3(ourPoint.x, 0, ourPoint.z), 0));
-    }
+    float ty1 = (m_pos.y - invE.y)/invP.y;
+    vec4 ourPoint = (invE + ty1 * invP);
+    cout << pow(ourPoint.x, 2) + pow(ourPoint.y, 2) << endl;
+    if (pow(ourPoint.x, 2) + pow(ourPoint.z, 2) <= 1)
+        ret.addCollision(CollisionInfo(ty1, E + ty1 * P, normalize(vec4(transpose(inverse(mat3(M))) * vec3(0, 1, 0), 0))));
+
+    m_pos = vec3(0,-1,0);
+    ty1 = (m_pos.y - invE.y)/invP.y;
+    ourPoint = (invE + ty1 * invP);
+    if (pow(ourPoint.x, 2) + pow(ourPoint.z, 2) <= 1)
+        ret.addCollision(CollisionInfo(ty1, E + ty1 * P, normalize(vec4(transpose(inverse(mat3(M))) * vec3(0, -1, 0), 0))));
 
     return ret;
 }

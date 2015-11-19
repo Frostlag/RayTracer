@@ -10,6 +10,7 @@ using namespace glm;
 
 int subdivisions = 2;
 int threads = 1;
+int cwindow = 1;
 
 int main(int argc, char** argv)
 {
@@ -20,6 +21,8 @@ int main(int argc, char** argv)
         try{
             subdivisions = std::stoi(argv[2]);
             threads = std::stoi(argv[3]);
+            if (argc >= 5)
+                cwindow = std::stoi(argv[4]);
         }catch(...){}
     }
   }

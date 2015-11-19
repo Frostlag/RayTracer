@@ -17,5 +17,5 @@ public:
 	Material *m_material;
 	Primitive *m_primitive;
 
-	CollisionInfo Collide(glm::vec4 E, glm::vec4 P, glm::mat4 M);
+	PrimitiveCollisions Collide(glm::vec4 E, glm::vec4 P, glm::mat4 M);
 };

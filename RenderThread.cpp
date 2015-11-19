@@ -28,12 +28,12 @@ RenderThread::~RenderThread(){
     thethread.join();
 }
 
-CollisionInfo traverseScene(SceneNode * root, vec4 E, vec4 P, mat4 M){
-	CollisionInfo ret = CollisionInfo();
-// #ifndef NOBOUNDING
-// 	if (!root->BoundingVolumeCollide(E, P, M))
-// 		return ret;
-// #endif
+PrimitiveCollisions traverseScene(SceneNode * root, vec4 E, vec4 P, mat4 M){
+	PrimitiveCollisions ret = PrimitiveCollisions();
+#ifndef NOBOUNDING
+	if (!root->BoundingVolumeCollide(E, P, M))
+		return ret;
+#endif
 	if (root->m_nodeType == NodeType::GeometryNode){
 		GeometryNode* geometryNode = static_cast<GeometryNode*>(root);
 		ret = geometryNode->Collide(E, P, M);
@@ -41,24 +41,26 @@ CollisionInfo traverseScene(SceneNode * root, vec4 E, vec4 P, mat4 M){
 
 	}
 	for (SceneNode* children : root->children){
-		CollisionInfo temp = traverseScene(children, E, P, M * root->get_transform());
-		if (!temp.isValid) continue;
-		if (!ret.isValid)
+		PrimitiveCollisions temp = traverseScene(children, E, P, M * root->get_transform());
+		if (temp.isEmpty()) continue;
+		if (ret.isEmpty())
 			ret = temp;
-		else if (ret.d > temp.d)
+		else if (ret.getCollisions().front().d > temp.getCollisions().front().d)
 			ret = temp;
 	}
 	return ret;
 }
 
-vec3 calculateColour(SceneNode * root, const list<Light *> & lights, const vec3 & ambient, CollisionInfo collisionInfo, vec4 E, vec4 P){
+vec3 calculateColour(SceneNode * root, const list<Light *> & lights, const vec3 & ambient, PrimitiveCollisions primitiveCollisions, vec4 E, vec4 P){
 	vec3 ret;
 
-	if (!collisionInfo.isValid)
+	if (primitiveCollisions.isEmpty())
 		return ret;
 
-	if (collisionInfo.mat == NULL)
-		collisionInfo.mat = &defaultMat;
+    CollisionInfo collisionInfo = primitiveCollisions.getCollisions().front();
+
+	if (primitiveCollisions.mat == NULL)
+		primitiveCollisions.mat = &defaultMat;
 
 
 	auto attenuationConstant = [] (float r, double falloff[]){
@@ -66,14 +68,14 @@ vec3 calculateColour(SceneNode * root, const list<Light *> & lights, const vec3 
 		return 1/(falloff[0] + falloff[1] * r + falloff[2] * r * r);
 	};
 
-	ret = ambient * collisionInfo.mat->getKD();
+	ret = ambient * primitiveCollisions.mat->getKD();
 
 	for( Light * light : lights){
 		vec4 l = normalize(vec4(light->position,1) - collisionInfo.position);
 		vec4 myEye = collisionInfo.position + l * 1e-2;
-		CollisionInfo obstruction = traverseScene( root, myEye, l, mat4());
-		if (obstruction.isValid){
-			if ( length(obstruction.d * l) < length(light->position - vec3(collisionInfo.position))){
+		PrimitiveCollisions obstruction = traverseScene( root, myEye, l, mat4());
+		if (!obstruction.isEmpty()){
+			if ( length(obstruction.getCollisions().front().d * l) < length(light->position - vec3(collisionInfo.position))){
 				continue;
 			}
 
@@ -82,7 +84,7 @@ vec3 calculateColour(SceneNode * root, const list<Light *> & lights, const vec3 
 		vec4 v = normalize(-P);
 		float n_dot_l = glm::max(dot(collisionInfo.normal, l),0.0f);
 		vec3 lightColor = light->colour;
-		vec3 kd = collisionInfo.mat->getKD();
+		vec3 kd = primitiveCollisions.mat->getKD();
 		vec3 diffuse = kd * n_dot_l;
 
 		vec3 specular = vec3(0.0);
@@ -90,7 +92,7 @@ vec3 calculateColour(SceneNode * root, const list<Light *> & lights, const vec3 
 		if (n_dot_l > 0){
 			vec4 h = (normalize(v + l));
 			float n_dot_h = glm::max(dot(collisionInfo.normal, h),0.0f);
-			specular = collisionInfo.mat->getKS() * pow(n_dot_h, collisionInfo.mat->getShininess());
+			specular = primitiveCollisions.mat->getKS() * pow(n_dot_h, primitiveCollisions.mat->getShininess());
 		}
 
 		ret += vec3(lightColor) * vec3(((diffuse + specular))) * attenuationConstant(length(vec4(light->position,0) - collisionInfo.position), light->falloff);
@@ -124,9 +126,9 @@ void RenderThread::main(){
                         for (int i = -supersub / 2; i < supersub / 2; i++ ){
                             for (int j = -supersub / 2; j < supersub / 2; j++){
                                 vec4 l = invV * vec4(pixel + i * uo4 + j * ro4, 0);
-                                CollisionInfo collisionInfo = traverseScene(root, E, l, mat4());
-                                if (collisionInfo.isValid){
-                                    colours.push_back(calculateColour(root, lights, ambient, collisionInfo, E, l));
+                                PrimitiveCollisions primitiveCollisions = traverseScene(root, E, l, mat4());
+                                if (!primitiveCollisions.isEmpty()){
+                                    colours.push_back(calculateColour(root, lights, ambient, primitiveCollisions, E, l));
                                 }else{
                                     colours.push_back(generateBG(px, h-py-1, w, h));
                                 }
@@ -145,10 +147,10 @@ void RenderThread::main(){
                         vec4 l = invV * vec4(pixel, 0);
                         // cout << "pixel: " << to_string(pixel) << endl;
                         // cout << "l: "<< to_string(l) << endl;
-                        CollisionInfo collisionInfo = traverseScene(root, E, l, mat4());
+                        PrimitiveCollisions primitiveCollisions = traverseScene(root, E, l, mat4());
 
-                        if (collisionInfo.isValid){
-                            colour = calculateColour(root, lights, ambient, collisionInfo, E, l);
+                        if (!primitiveCollisions.isEmpty()){
+                            colour = calculateColour(root, lights, ambient, primitiveCollisions, E, l);
                         }else{
                             colour = generateBG(px, h-py-1, w, h);
                         }

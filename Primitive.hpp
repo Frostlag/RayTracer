@@ -2,22 +2,11 @@
 
 #include <glm/glm.hpp>
 #include <functional>
-#include "PhongMaterial.hpp"
-
-struct CollisionInfo{
-  bool isValid;
-  glm::vec4 position;
-  glm::vec4 normal;
-  float d;
-  PhongMaterial* mat;
-  std::string node_name;
-
-  CollisionInfo();
-};
+#include "Collision.hpp"
 
 class Primitive {
 public:
-  virtual CollisionInfo Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M) = 0;
+  virtual PrimitiveCollisions Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M) = 0;
   virtual std::pair<glm::vec4,glm::vec4> getBounds() = 0;
   virtual ~Primitive();
 };
@@ -25,13 +14,13 @@ public:
 class Sphere : public Primitive {
 public:
   virtual ~Sphere();
-  virtual CollisionInfo Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
+  virtual PrimitiveCollisions Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
   virtual std::pair<glm::vec4,glm::vec4> getBounds();
 };
 
 class Cube : public Primitive {
 public:
-  virtual CollisionInfo Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
+  virtual PrimitiveCollisions Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
   virtual ~Cube();
   virtual std::pair<glm::vec4,glm::vec4> getBounds();
 };
@@ -42,7 +31,7 @@ public:
     : m_pos(pos), m_radius(radius)
   {
   }
-  virtual CollisionInfo Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
+  virtual PrimitiveCollisions Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
   virtual ~NonhierSphere();
   virtual std::pair<glm::vec4,glm::vec4> getBounds();
   glm::vec3 getPos(){ return m_pos; }
@@ -59,7 +48,7 @@ public:
     : m_pos(pos), m_size(size)
   {
   }
-  virtual CollisionInfo Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
+  virtual PrimitiveCollisions Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
   bool Bounds( glm::vec4 E,glm::vec4 P, glm::mat4 M );
   virtual ~NonhierBox();
 
@@ -74,7 +63,7 @@ private:
 
 class Cone : public Primitive {
 public:
-  virtual CollisionInfo Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
+  virtual PrimitiveCollisions Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
   virtual ~Cone();
   virtual std::pair<glm::vec4,glm::vec4> getBounds();
 
@@ -82,7 +71,7 @@ public:
 
 class Cylinder: public Primitive {
 public:
-  virtual CollisionInfo Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
+  virtual PrimitiveCollisions Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
   virtual ~Cylinder();
   virtual std::pair<glm::vec4,glm::vec4> getBounds();
 
