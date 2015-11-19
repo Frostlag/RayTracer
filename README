@@ -1,27 +1,11 @@
 Compilation
 ------------------------------------------------------------------------
 To compile without using bounding volumes, just make.
-To compile using bounding volumes, use "make CPPFLAGS=-DBOUDNING".
 
-To run, do ./A4 <scene_file> <subdivisions>, where scene file is lua file
+To run, do ./A5 <scene_file> <subdivisions> <threads>, where scene file is lua file
 of the scene you're trying to render. And subdivisions is how many subdivisions
-you wish to spawn worker threads to work on per axis, so a subdivision of
-2 would create 4 works, and 3 would create 9 workers.
-
-There is already a made Bounding Volume example that would be executed
-with ./A4BoundingVolumes.
+you wish to divide the picture into. And threads is just how many threads the spawned
+to work on it.
 
 Manual
 ------------------------------------------------------------------------
-I've implemented super sampling as my extension, which shoots off a specified
-subdivision of rays evenly spaced amongst themselves per pixel to calculate
-the colour. Then it takes the average colour of all those rays and uses that
-as the colour.
-
-
-Execution time of sample.lua, but with 128x128 resolution yields 57s without
-Bounding Volumes and 20 subdivisions, and 34s with Bounding Volumes.
-
-The sample picture is supposed to be cowhenge, with some arch visitors, and
-was rendered at 1024x1024 with supersampling, at 16 rays per pixel, and was
-rendered in 40 minutes.
