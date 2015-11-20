@@ -42,3 +42,20 @@ PrimitiveCollisions GeometryNode::Collide(vec4 E, vec4 P, mat4 M){
 	}
 	return primitiveCollisions;
 }
+
+void GeometryNode::reboundVolume(){
+	SceneNode::reboundVolume();
+	vec4 min, max;
+	pair<vec4,vec4> points = m_primitive->getBounds();
+	min = glm::min(points.first, points.second);
+	max = glm::max(points.first, points.second);
+
+	if (boundingVolume != NULL){
+		min = glm::min(min,vec4(boundingVolume->getPos(), 1));
+		max = glm::max(max,vec4(boundingVolume->getPos() + vec3(boundingVolume->getSize()), 1));
+		delete boundingVolume;
+	}
+	vec4 diff = max-min;
+	float diffmax = glm::max(diff.x,diff.y,diff.z);
+	boundingVolume = new NonhierBox(vec3(min) - vec3(1), diffmax + 1);
+}

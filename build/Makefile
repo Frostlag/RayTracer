@@ -81,6 +81,7 @@ OBJECTS := \
 	$(OBJDIR)/SceneNode.o \
 	$(OBJDIR)/RenderThread.o \
 	$(OBJDIR)/Collision.o \
+	$(OBJDIR)/CSGNode.o \
 
 RESOURCES := \
 
@@ -190,6 +191,9 @@ $(OBJDIR)/RenderThread.o: ../RenderThread.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/Collision.o: ../Collision.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/CSGNode.o: ../CSGNode.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 

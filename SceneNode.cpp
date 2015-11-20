@@ -11,7 +11,6 @@ using namespace std;
 #include <glm/ext.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/component_wise.hpp>
-#include "GeometryNode.hpp"
 using namespace glm;
 
 
@@ -139,20 +138,6 @@ void SceneNode::reboundVolume(){
 
     vec4 min, max;
     bool init = false;
-    if (m_nodeType == NodeType::GeometryNode){
-        //cout << "BINDING GEOMETRY" << endl;
-        GeometryNode* geometeryNode = static_cast<GeometryNode*>(this);
-        pair<vec4,vec4> points = geometeryNode->m_primitive->getBounds();
-        points = { points.first, points.second};
-        if (!init){
-            min = glm::min(points.first, points.second);
-            max = glm::max(points.first, points.second);
-        }else{
-            min = glm::min(min,points.first, points.second);
-            max = glm::max(max,points.first, points.second);
-        }
-        init = true;
-    }
     for( SceneNode * child : children ){
         child->reboundVolume();
 		if (child->boundingVolume == NULL) continue;
@@ -194,3 +179,10 @@ bool SceneNode::BoundingVolumeCollide(vec4 E, vec4 P, mat4 M){
 	return boundingVolume->Bounds(E, P, M * get_transform());
 
 }
+
+PrimitiveCollisions SceneNode::Collide(vec4 E, vec4 P, mat4 M){
+	PrimitiveCollisions ret;
+
+	return ret;
+}
+

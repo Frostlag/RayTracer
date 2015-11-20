@@ -314,7 +314,6 @@ PrimitiveCollisions Cone::Collide(glm::vec4 E,glm::vec4 P, glm::mat4 M){
     vec3 m_pos = vec3(0,1,0);
     float ty1 = (m_pos.y - invE.y)/invP.y;
     vec4 ourPoint = (invE + ty1 * invP);
-    cout << pow(ourPoint.x, 2) + pow(ourPoint.y, 2) << endl;
     if (pow(ourPoint.x, 2) + pow(ourPoint.z, 2) <= 1)
         ret.addCollision(CollisionInfo(ty1, E + ty1 * P, normalize(vec4(transpose(inverse(mat3(M))) * vec3(0, 1, 0), 0))));
 
@@ -389,7 +388,6 @@ PrimitiveCollisions Cylinder::Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M ){
 
     float ty1 = (m_pos.y - invE.y)/invP.y;
     vec4 ourPoint = (invE + ty1 * invP);
-    cout << pow(ourPoint.x, 2) + pow(ourPoint.y, 2) << endl;
     if (pow(ourPoint.x, 2) + pow(ourPoint.z, 2) <= 1)
         ret.addCollision(CollisionInfo(ty1, E + ty1 * P, normalize(vec4(transpose(inverse(mat3(M))) * vec3(0, 1, 0), 0))));
 

@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <functional>
 #include "Collision.hpp"
+class SceneNode;
 
 class Primitive {
 public:
@@ -74,6 +75,5 @@ public:
   virtual PrimitiveCollisions Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
   virtual ~Cylinder();
   virtual std::pair<glm::vec4,glm::vec4> getBounds();
-
-
 };
+

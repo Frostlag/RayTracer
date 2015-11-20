@@ -81,13 +81,19 @@ void A5_Render(
 		threadvector.push_back(temp);
 	}
 	cout << "Threads: " << threadvector.size() << endl;
-
-	while(!window->isClosed() && cwindow >= 1){
-		if (!RenderThread::WorkingThreads.empty()){
-			blockList->outputProgress();
+	if (cwindow >= 1){	
+		while(!window->isClosed()){
+			if (!RenderThread::WorkingThreads.empty()){
+				blockList->outputProgress();
+			}
+			window->tick();
+			this_thread::sleep_for(std::chrono::milliseconds(500));
 		}
-		window->tick();
-		this_thread::sleep_for(std::chrono::milliseconds(500));
+	}else{
+		while(!RenderThread::WorkingThreads.empty()){
+			blockList->outputProgress();
+			this_thread::sleep_for(std::chrono::milliseconds(500));
+		}
 	}
 
 	for(int i = 0; i < threadvector.size(); i++){

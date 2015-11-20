@@ -54,6 +54,7 @@
 #include "Material.hpp"
 #include "PhongMaterial.hpp"
 #include "A5.hpp"
+#include "CSGNode.hpp"
 
 typedef std::map<std::string,Mesh*> MeshMap;
 static MeshMap mesh_map;
@@ -158,6 +159,114 @@ int gr_joint_cmd(lua_State* L)
   return 1;
 }
 
+
+// Create a union node
+extern "C"
+int gr_union_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
+  data->node = 0;
+
+  const char* name = luaL_checkstring(L, 1);
+
+  gr_node_ud* childdata1 = (gr_node_ud*)luaL_checkudata(L, 2, "gr.node");
+  luaL_argcheck(L, childdata1 != 0, 2, "Node expected");
+
+  gr_node_ud* childdata2 = (gr_node_ud*)luaL_checkudata(L, 3, "gr.node");
+  luaL_argcheck(L, childdata2 != 0, 2, "Node expected");
+
+  SceneNode* child1 = childdata1->node;
+  SceneNode* child2 = childdata2->node;
+  data->node = new UnionNode( name, *child1, *child2 );
+
+  luaL_getmetatable(L, "gr.node");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
+// Create a conjunction node
+extern "C"
+int gr_conjunction_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
+  data->node = 0;
+
+  const char* name = luaL_checkstring(L, 1);
+
+  gr_node_ud* childdata1 = (gr_node_ud*)luaL_checkudata(L, 2, "gr.node");
+  luaL_argcheck(L, childdata1 != 0, 2, "Node expected");
+
+  gr_node_ud* childdata2 = (gr_node_ud*)luaL_checkudata(L, 3, "gr.node");
+  luaL_argcheck(L, childdata2 != 0, 2, "Node expected");
+
+  SceneNode* child1 = childdata1->node;
+  SceneNode* child2 = childdata2->node;
+  data->node = new ConjunctionNode( name, *child1, *child2);
+
+  luaL_getmetatable(L, "gr.node");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
+// Create a subtraction node
+extern "C"
+int gr_subtraction_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
+  data->node = 0;
+
+  const char* name = luaL_checkstring(L, 1);
+
+  gr_node_ud* childdata1 = (gr_node_ud*)luaL_checkudata(L, 2, "gr.node");
+  luaL_argcheck(L, childdata1 != 0, 2, "Node expected");
+
+  gr_node_ud* childdata2 = (gr_node_ud*)luaL_checkudata(L, 3, "gr.node");
+  luaL_argcheck(L, childdata2 != 0, 2, "Node expected");
+
+  SceneNode* child1 = childdata1->node;
+  SceneNode* child2 = childdata2->node;
+  data->node = new SubtractionNode( name, *child1, *child2);
+
+  luaL_getmetatable(L, "gr.node");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
+// Create a exclusive node
+extern "C"
+int gr_exclusive_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
+  data->node = 0;
+
+  const char* name = luaL_checkstring(L, 1);
+
+  gr_node_ud* childdata1 = (gr_node_ud*)luaL_checkudata(L, 2, "gr.node");
+  luaL_argcheck(L, childdata1 != 0, 2, "Node expected");
+
+  gr_node_ud* childdata2 = (gr_node_ud*)luaL_checkudata(L, 3, "gr.node");
+  luaL_argcheck(L, childdata2 != 0, 2, "Node expected");
+
+  SceneNode* child1 = childdata1->node;
+  SceneNode* child2 = childdata2->node;
+  data->node = new ExclusiveNode( name, *child1, *child2);
+
+  luaL_getmetatable(L, "gr.node");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
 // Create a sphere node
 extern "C"
 int gr_sphere_cmd(lua_State* L)
@@ -558,6 +667,10 @@ static const luaL_Reg grlib_functions[] = {
   {"cube", gr_cube_cmd},
   {"cone", gr_cone_cmd},
   {"cylinder", gr_cylinder_cmd},
+  {"union", gr_union_cmd},
+  {"conjunction", gr_conjunction_cmd},
+  {"subtraction", gr_subtraction_cmd},
+  {"exclusive", gr_exclusive_cmd},
   {"nh_sphere", gr_nh_sphere_cmd},
   {"nh_box", gr_nh_box_cmd},
   {"mesh", gr_mesh_cmd},

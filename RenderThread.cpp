@@ -31,15 +31,12 @@ RenderThread::~RenderThread(){
 PrimitiveCollisions traverseScene(SceneNode * root, vec4 E, vec4 P, mat4 M){
 	PrimitiveCollisions ret = PrimitiveCollisions();
 #ifndef NOBOUNDING
-	if (!root->BoundingVolumeCollide(E, P, M))
+	if (!root->BoundingVolumeCollide(E, P, M) && false)
 		return ret;
 #endif
-	if (root->m_nodeType == NodeType::GeometryNode){
-		GeometryNode* geometryNode = static_cast<GeometryNode*>(root);
-		ret = geometryNode->Collide(E, P, M);
+	ret = root->Collide(E, P, M);
 
 
-	}
 	for (SceneNode* children : root->children){
 		PrimitiveCollisions temp = traverseScene(children, E, P, M * root->get_transform());
 		if (temp.isEmpty()) continue;

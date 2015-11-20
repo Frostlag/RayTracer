@@ -2,6 +2,7 @@
 
 #include "Material.hpp"
 #include "Primitive.hpp"
+#include "Collision.hpp"
 
 #include <glm/glm.hpp>
 
@@ -12,7 +13,8 @@
 enum class NodeType {
 	SceneNode,
 	GeometryNode,
-	JointNode
+	JointNode,
+	CSGNode
 };
 
 class SceneNode {
@@ -39,7 +41,7 @@ public:
     void scale(const glm::vec3& amount);
     void translate(const glm::vec3& amount);
 
-	void reboundVolume();
+	virtual void reboundVolume();
 
 	friend std::ostream & operator << (std::ostream & os, const SceneNode & node);
 
@@ -55,6 +57,8 @@ public:
 	NonhierBox* boundingVolume;
 
 	bool BoundingVolumeCollide(glm::vec4 E, glm::vec4 P, glm::mat4 M);
+
+	virtual PrimitiveCollisions Collide(glm::vec4 E, glm::vec4 P, glm::mat4 M);
 private:
 	// The number of SceneNode instances.
 	static unsigned int nodeInstanceCount;

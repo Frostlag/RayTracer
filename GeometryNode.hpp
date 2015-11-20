@@ -17,5 +17,6 @@ public:
 	Material *m_material;
 	Primitive *m_primitive;
 
-	PrimitiveCollisions Collide(glm::vec4 E, glm::vec4 P, glm::mat4 M);
+	virtual PrimitiveCollisions Collide(glm::vec4 E, glm::vec4 P, glm::mat4 M);
+	virtual void reboundVolume();
 };
