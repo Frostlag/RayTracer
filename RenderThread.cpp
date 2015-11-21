@@ -31,7 +31,7 @@ RenderThread::~RenderThread(){
 PrimitiveCollisions traverseScene(SceneNode * root, vec4 E, vec4 P, mat4 M){
 	PrimitiveCollisions ret = PrimitiveCollisions();
 #ifndef NOBOUNDING
-	if (!root->BoundingVolumeCollide(E, P, M) && false)
+	if (!root->BoundingVolumeCollide(E, P, M))
 		return ret;
 #endif
 	ret = root->Collide(E, P, M);
