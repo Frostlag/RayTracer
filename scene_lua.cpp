@@ -520,6 +520,32 @@ int gr_material_cmd(lua_State* L)
   return 1;
 }
 
+// Create a reflectivity and refraction material
+extern "C"
+int gr_new_material_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_material_ud* data = (gr_material_ud*)lua_newuserdata(L, sizeof(gr_material_ud));
+  data->material = 0;
+
+  double kd[3], ks[3];
+  get_tuple(L, 1, kd, 3);
+  get_tuple(L, 2, ks, 3);
+
+  double shininess = luaL_checknumber(L, 3);
+  double reflectivity = luaL_checknumber(L, 4);
+
+  data->material = new PhongMaterial(glm::vec3(kd[0], kd[1], kd[2]),
+                                     glm::vec3(ks[0], ks[1], ks[2]),
+                                     shininess, reflectivity);
+
+  luaL_newmetatable(L, "gr.material");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
 // Add a child to a node
 extern "C"
 int gr_node_add_child_cmd(lua_State* L)
@@ -663,6 +689,7 @@ static const luaL_Reg grlib_functions[] = {
   {"sphere", gr_sphere_cmd},
   {"joint", gr_joint_cmd},
   {"material", gr_material_cmd},
+  {"new_material", gr_new_material_cmd},
   // New for assignment 4
   {"cube", gr_cube_cmd},
   {"cone", gr_cone_cmd},

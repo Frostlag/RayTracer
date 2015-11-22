@@ -15,7 +15,7 @@ extern int cwindow;
 bool super = false;
 int supersub = 4;
 BlockList *blockList;
-PhongMaterial defaultMat(vec3(0.2,0.2,0.2),vec3(0.1,0.1,0.1),40);
+PhongMaterial defaultMat(vec3(0.2,0.2,0.2),vec3(0.1,0.1,0.1),40,0);
 
 
 void A5_Render(

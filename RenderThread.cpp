@@ -28,7 +28,7 @@ RenderThread::~RenderThread(){
     thethread.join();
 }
 
-PrimitiveCollisions traverseScene(SceneNode * root, vec4 E, vec4 P, mat4 M){
+PrimitiveCollisions RenderThread::traverseScene(SceneNode * root, vec4 E, vec4 P, mat4 M){
 	PrimitiveCollisions ret = PrimitiveCollisions();
 #ifndef NOBOUNDING
 	if (!root->BoundingVolumeCollide(E, P, M))
@@ -48,7 +48,7 @@ PrimitiveCollisions traverseScene(SceneNode * root, vec4 E, vec4 P, mat4 M){
 	return ret;
 }
 
-vec3 calculateColour(SceneNode * root, const list<Light *> & lights, const vec3 & ambient, PrimitiveCollisions primitiveCollisions, vec4 E, vec4 P){
+vec3 RenderThread::calculateColour(SceneNode * root, const list<Light *> & lights, const vec3 & ambient, PrimitiveCollisions primitiveCollisions, vec4 E, vec4 P, float adds){
 	vec3 ret;
 
 	if (primitiveCollisions.isEmpty())
@@ -66,10 +66,27 @@ vec3 calculateColour(SceneNode * root, const list<Light *> & lights, const vec3 
 	};
 
 	ret = ambient * primitiveCollisions.mat->getKD();
+	//cout << length(primitiveCollisions.mat->getKD()) << endl;
+	if (primitiveCollisions.mat->getReflectivity() > 0 && adds > 0.1){
+		double reflectivity = primitiveCollisions.mat->getReflectivity();
+		CollisionInfo first = primitiveCollisions.getCollisions().front();
+		vec4 normal = first.normal;
+		vec4 newP = P - 2 * dot(P, normal) * normal;
+		vec4 newE = first.position + newP * 5;
+		//cout << "Reflecting on " << to_string(newP) << " from " << to_string(newE) << endl;
+		PrimitiveCollisions newCollisions = traverseScene(root, newE, newP, mat4());
+		if (!newCollisions.isEmpty()){
+			vec3 newColour = calculateColour(root, lights, ambient, newCollisions, newE, newP, adds * reflectivity * length(primitiveCollisions.mat->getKD()) / 3);
+			ret += reflectivity * newColour * primitiveCollisions.mat->getKD();
+			//cout << to_string(reflectivity * newColour) << endl;
+		}
+
+	}
+
 
 	for( Light * light : lights){
 		vec4 l = normalize(vec4(light->position,1) - collisionInfo.position);
-		vec4 myEye = collisionInfo.position + l * 1e-2;
+		vec4 myEye = collisionInfo.position + l;
 		PrimitiveCollisions obstruction = traverseScene( root, myEye, l, mat4());
 		if (!obstruction.isEmpty()){
 			if ( length(obstruction.getCollisions().front().d * l) < length(light->position - vec3(collisionInfo.position))){
@@ -99,6 +116,43 @@ vec3 calculateColour(SceneNode * root, const list<Light *> & lights, const vec3 
 	// 	cout << "Plane normal is " << to_string(collisionInfo.normal) << endl;
 	// }
 	return glm::min(ret,1.0f);
+}
+
+vec3 RenderThread::calculateLighting(PrimitiveCollisions primitiveCollisions, vec4 E, vec4 P){
+    vec3 ret(0);
+    CollisionInfo collisionInfo = primitiveCollisions.getCollisions().front();
+    auto attenuationConstant = [] (float r, double falloff[]){
+		float c1 = 1, c2 = 1, c3 = 1;
+		return 1/(falloff[0] + falloff[1] * r + falloff[2] * r * r);
+	};
+    for( Light * light : lights){
+		vec4 l = normalize(vec4(light->position,1) - collisionInfo.position);
+		vec4 myEye = collisionInfo.position + l;
+		PrimitiveCollisions obstruction = traverseScene( root, myEye, l, mat4());
+		if (!obstruction.isEmpty()){
+			if ( length(obstruction.getCollisions().front().d * l) < length(light->position - vec3(collisionInfo.position))){
+				continue;
+			}
+
+		}
+		//cout << collisionInfo.node_name << " not obstructed" << endl;
+		vec4 v = normalize(-P);
+		float n_dot_l = glm::max(dot(collisionInfo.normal, l),0.0f);
+		vec3 lightColor = light->colour;
+		vec3 kd = primitiveCollisions.mat->getKD();
+		vec3 diffuse = kd * n_dot_l;
+
+		vec3 specular = vec3(0.0);
+
+		if (n_dot_l > 0){
+			vec4 h = (normalize(v + l));
+			float n_dot_h = glm::max(dot(collisionInfo.normal, h),0.0f);
+			specular = primitiveCollisions.mat->getKS() * pow(n_dot_h, primitiveCollisions.mat->getShininess());
+		}
+
+		ret += vec3(lightColor) * vec3(((diffuse + specular))) * attenuationConstant(length(vec4(light->position,0) - collisionInfo.position), light->falloff);
+	}
+    return ret;
 }
 
 

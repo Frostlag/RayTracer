@@ -39,6 +39,9 @@ class RenderThread{
 
     std::list<Changed> changes;
 
+	PrimitiveCollisions traverseScene(SceneNode * root, glm::vec4 E, glm::vec4 P, glm::mat4 M);
+	glm::vec3 calculateColour(SceneNode * root, const std::list<Light *> & lights, const glm::vec3 & ambient, PrimitiveCollisions primitiveCollisions, glm::vec4 E, glm::vec4 P, float adds = 1);
+    glm::vec3 calculateLighting(PrimitiveCollisions primitiveCollisions, glm::vec4 E, glm::vec4 P);
 public:
     static std::list<RenderThread*> Threads;
     static std::list<RenderThread*> WorkingThreads;
