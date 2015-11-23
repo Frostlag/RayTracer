@@ -4,6 +4,7 @@
 #include "Primitive.hpp"
 #include "GeometryNode.hpp"
 #include "PhongMaterial.hpp"
+#include "Utilities.hpp"
 using namespace std;
 using namespace glm;
 
@@ -11,6 +12,8 @@ using namespace glm;
 extern bool super;
 extern int supersub;
 extern PhongMaterial defaultMat;
+extern float reflectionThreshold;
+extern float myEpsilon;
 
 std::list<RenderThread*> RenderThread::Threads;
 std::list<RenderThread*> RenderThread::WorkingThreads;
@@ -30,12 +33,14 @@ RenderThread::~RenderThread(){
 
 PrimitiveCollisions RenderThread::traverseScene(SceneNode * root, vec4 E, vec4 P, mat4 M){
 	PrimitiveCollisions ret = PrimitiveCollisions();
-#ifndef NOBOUNDING
-	if (!root->BoundingVolumeCollide(E, P, M))
+// #ifndef NOBOUNDING
+	if (!root->BoundingVolumeCollide(E, P, M)){
+        //cout << "Bounding Miss" << endl;
 		return ret;
-#endif
-	ret = root->Collide(E, P, M);
 
+    }
+// #endif
+	ret = root->Collide(E, P, M);
 
 	for (SceneNode* children : root->children){
 		PrimitiveCollisions temp = traverseScene(children, E, P, M * root->get_transform());
@@ -48,7 +53,7 @@ PrimitiveCollisions RenderThread::traverseScene(SceneNode * root, vec4 E, vec4 P
 	return ret;
 }
 
-vec3 RenderThread::calculateColour(SceneNode * root, const list<Light *> & lights, const vec3 & ambient, PrimitiveCollisions primitiveCollisions, vec4 E, vec4 P, float adds){
+vec3 RenderThread::calculateColour(PrimitiveCollisions primitiveCollisions, vec4 E, vec4 P, float adds){
 	vec3 ret;
 
 	if (primitiveCollisions.isEmpty())
@@ -56,65 +61,17 @@ vec3 RenderThread::calculateColour(SceneNode * root, const list<Light *> & light
 
     CollisionInfo collisionInfo = primitiveCollisions.getCollisions().front();
 
-	if (primitiveCollisions.mat == NULL)
-		primitiveCollisions.mat = &defaultMat;
+    PhongMaterial* mat = primitiveCollisions.mat;
+	if (mat == NULL)
+		mat = &defaultMat;
 
+	ret = ambient * mat->getKD() * mat->getOpacity();
+	if (mat->getReflectivity() > 0)
+        ret += calculateReflection(primitiveCollisions, E, P, adds);
+    if (mat->getOpacity() < 1)
+        ret += calculateRefraction(primitiveCollisions, E, P, adds);
 
-	auto attenuationConstant = [] (float r, double falloff[]){
-		float c1 = 1, c2 = 1, c3 = 1;
-		return 1/(falloff[0] + falloff[1] * r + falloff[2] * r * r);
-	};
-
-	ret = ambient * primitiveCollisions.mat->getKD();
-	//cout << length(primitiveCollisions.mat->getKD()) << endl;
-	if (primitiveCollisions.mat->getReflectivity() > 0 && adds > 0.1){
-		double reflectivity = primitiveCollisions.mat->getReflectivity();
-		CollisionInfo first = primitiveCollisions.getCollisions().front();
-		vec4 normal = first.normal;
-		vec4 newP = P - 2 * dot(P, normal) * normal;
-		vec4 newE = first.position + newP * 5;
-		//cout << "Reflecting on " << to_string(newP) << " from " << to_string(newE) << endl;
-		PrimitiveCollisions newCollisions = traverseScene(root, newE, newP, mat4());
-		if (!newCollisions.isEmpty()){
-			vec3 newColour = calculateColour(root, lights, ambient, newCollisions, newE, newP, adds * reflectivity * length(primitiveCollisions.mat->getKD()) / 3);
-			ret += reflectivity * newColour * primitiveCollisions.mat->getKD();
-			//cout << to_string(reflectivity * newColour) << endl;
-		}
-
-	}
-
-
-	for( Light * light : lights){
-		vec4 l = normalize(vec4(light->position,1) - collisionInfo.position);
-		vec4 myEye = collisionInfo.position + l;
-		PrimitiveCollisions obstruction = traverseScene( root, myEye, l, mat4());
-		if (!obstruction.isEmpty()){
-			if ( length(obstruction.getCollisions().front().d * l) < length(light->position - vec3(collisionInfo.position))){
-				continue;
-			}
-
-		}
-		//cout << collisionInfo.node_name << " not obstructed" << endl;
-		vec4 v = normalize(-P);
-		float n_dot_l = glm::max(dot(collisionInfo.normal, l),0.0f);
-		vec3 lightColor = light->colour;
-		vec3 kd = primitiveCollisions.mat->getKD();
-		vec3 diffuse = kd * n_dot_l;
-
-		vec3 specular = vec3(0.0);
-
-		if (n_dot_l > 0){
-			vec4 h = (normalize(v + l));
-			float n_dot_h = glm::max(dot(collisionInfo.normal, h),0.0f);
-			specular = primitiveCollisions.mat->getKS() * pow(n_dot_h, primitiveCollisions.mat->getShininess());
-		}
-
-		ret += vec3(lightColor) * vec3(((diffuse + specular))) * attenuationConstant(length(vec4(light->position,0) - collisionInfo.position), light->falloff);
-	}
-		//cout << to_string((diffuse + specular)) << endl;
-	// if (collisionInfo.node_name == "plane"){
-	// 	cout << "Plane normal is " << to_string(collisionInfo.normal) << endl;
-	// }
+    ret += calculateLighting(primitiveCollisions, E, P);
 	return glm::min(ret,1.0f);
 }
 
@@ -129,13 +86,16 @@ vec3 RenderThread::calculateLighting(PrimitiveCollisions primitiveCollisions, ve
 		vec4 l = normalize(vec4(light->position,1) - collisionInfo.position);
 		vec4 myEye = collisionInfo.position + l;
 		PrimitiveCollisions obstruction = traverseScene( root, myEye, l, mat4());
+        float lighteffect = 1;
 		if (!obstruction.isEmpty()){
 			if ( length(obstruction.getCollisions().front().d * l) < length(light->position - vec3(collisionInfo.position))){
-				continue;
+                if (obstruction.mat->getOpacity() < 1){
+                    lighteffect = obstruction.mat->getOpacity();
+                }
+				else continue;
 			}
 
 		}
-		//cout << collisionInfo.node_name << " not obstructed" << endl;
 		vec4 v = normalize(-P);
 		float n_dot_l = glm::max(dot(collisionInfo.normal, l),0.0f);
 		vec3 lightColor = light->colour;
@@ -150,11 +110,105 @@ vec3 RenderThread::calculateLighting(PrimitiveCollisions primitiveCollisions, ve
 			specular = primitiveCollisions.mat->getKS() * pow(n_dot_h, primitiveCollisions.mat->getShininess());
 		}
 
-		ret += vec3(lightColor) * vec3(((diffuse + specular))) * attenuationConstant(length(vec4(light->position,0) - collisionInfo.position), light->falloff);
+		ret += lighteffect * (vec3(lightColor) * vec3(((diffuse + specular))) * attenuationConstant(length(vec4(light->position,0) - collisionInfo.position), light->falloff));
 	}
     return ret;
 }
 
+vec3 RenderThread::calculateReflection(PrimitiveCollisions primitiveCollisions, vec4 E, vec4 P, float adds){
+    vec3 ret(0);
+    if (adds < reflectionThreshold)
+        return ret;
+    double reflectivity = primitiveCollisions.mat->getReflectivity();
+    CollisionInfo first = primitiveCollisions.getCollisions().front();
+    vec4 normal = first.normal;
+    vec4 newP = normalize(P - 2 * dot(P, normal) * normal);
+    vec4 newE = first.position + newP;
+    PrimitiveCollisions newCollisions = traverseScene(root, newE, newP, mat4());
+    if (!newCollisions.isEmpty()){
+        vec3 newColour = calculateColour(newCollisions, newE, newP, adds * reflectivity * length(primitiveCollisions.mat->getKD()) / 3);
+        ret += reflectivity * newColour * primitiveCollisions.mat->getKS();
+    }
+    return ret;
+}
+
+vec3 RenderThread::calculateRefraction(PrimitiveCollisions primitiveCollisions, vec4 E, vec4 P, float adds){
+    vec3 ret(0);
+    if (adds < reflectionThreshold)
+        return ret;
+
+    CollisionInfo collisionInfo = primitiveCollisions.getCollisions().front();
+    PhongMaterial* mat = primitiveCollisions.mat;
+    vec3 normal = vec3(collisionInfo.normal);
+    float rindex1 = 1;
+    float rindex2 = mat->getIOR();
+    float snelldex = rindex1 / rindex2;
+    float costheta = -dot(-P,vec4(normal,0));
+    float sinsqtheta = pow(snelldex,2) * (1- pow(costheta,2));
+    vec3 refracted = normalize((snelldex * vec3(P)) + vec3((snelldex * costheta - sqrt(1 - sinsqtheta)) * normal));
+    vec4 newE = collisionInfo.position + myEpsilon * vec4(refracted,0);
+
+    //cout << "Entering from " << newE << " along " << P << ", then travelling along " << refracted << " because of normal " << to_string(normal) << endl;
+
+     PrimitiveCollisions newCollisions = traverseScene(root, newE, vec4(refracted,0), mat4());
+    if (newCollisions.isEmpty()){
+        cout << "Already out" << endl;
+        //return ret;
+        return ret;
+    }
+    if(newCollisions.node_id != primitiveCollisions.node_id){
+        return (1 - mat->getOpacity()) * calculateColour(newCollisions, newE, vec4(refracted,0), adds);
+    }
+
+    collisionInfo = newCollisions.getCollisions().front();
+    normal = vec3(-collisionInfo.normal);
+    //cout << "Next internal hit is " << collisionInfo.position << ", normal is " << normal << endl;
+    rindex1 = rindex2;
+    rindex2 = 1;
+    snelldex = rindex1 / rindex2;
+
+    costheta = -dot(refracted,normal);
+    sinsqtheta = pow(snelldex,2) * (1- pow(costheta,2));
+
+    int intrefs = 0;
+    while (sinsqtheta > 1){
+        //cout << "Internal reflection" << endl;
+        //cout << "Hit the other end " << newCollisions.getCollisions().size()  << endl;
+        //cout << "Ray is " << to_string(refracted) << ", normal is " << to_string(normal) << endl;
+        refracted = normalize(refracted -  2 * dot(refracted, normal) * normal);
+        //cout << "Reflacted ray is " << to_string(refracted) << endl;
+        newE = collisionInfo.position + myEpsilon * vec4(refracted, 0);
+        //cout << "Attempting to exit from " << to_string(collisionInfo.position) << " along " << to_string(P) << ", then travelling along " << to_string(refracted) << " because of normal " << to_string(normal) << endl;
+        newCollisions = traverseScene(root, newE, vec4(refracted, 0), mat4());
+        if (newCollisions.isEmpty()){
+            cout << "Already out after bouncing around" << endl;
+            //return ret;
+            return (1 - mat->getOpacity()) * generateBG(newE, vec4(refracted,0));
+        }
+        collisionInfo = newCollisions.getCollisions()[1];
+        normal = vec3(-collisionInfo.normal);
+        costheta = -dot(refracted,normal);
+        sinsqtheta = pow(snelldex,2) * (1- pow(costheta,2));
+        intrefs++;
+        if (intrefs >= 10)
+            break;
+    }
+
+    refracted = (snelldex * refracted) + ((snelldex * costheta - sqrt(1 - sinsqtheta)) * normal);
+    newE = collisionInfo.position + myEpsilon * vec4(refracted,0);
+    //cout << "Out of volume, now travelling along " << refracted << " from  " << newE << endl;
+    //cout << "Entered via " << P << endl;
+    newCollisions = traverseScene(root, newE, vec4(refracted,0), mat4());
+    if (newCollisions.isEmpty()){
+        //cout << "Exit ray didn't hit anything" << endl;
+        //return ret;
+        return (1 - mat->getOpacity()) * generateBG(newE, vec4(refracted,0));
+    }
+    //cout << "Exit ray hit " << newCollisions.node_name << endl;
+    return (1 - mat->getOpacity()) * calculateColour(newCollisions, newE, vec4(refracted,0), adds);
+
+
+}
 
 void RenderThread::main(){
     try{
@@ -179,9 +233,9 @@ void RenderThread::main(){
                                 vec4 l = invV * vec4(pixel + i * uo4 + j * ro4, 0);
                                 PrimitiveCollisions primitiveCollisions = traverseScene(root, E, l, mat4());
                                 if (!primitiveCollisions.isEmpty()){
-                                    colours.push_back(calculateColour(root, lights, ambient, primitiveCollisions, E, l));
+                                    colours.push_back(calculateColour(primitiveCollisions, E, l));
                                 }else{
-                                    colours.push_back(generateBG(px, h-py-1, w, h));
+                                    colours.push_back(generateBG(E, l));
                                 }
                             }
                         }
@@ -201,9 +255,9 @@ void RenderThread::main(){
                         PrimitiveCollisions primitiveCollisions = traverseScene(root, E, l, mat4());
 
                         if (!primitiveCollisions.isEmpty()){
-                            colour = calculateColour(root, lights, ambient, primitiveCollisions, E, l);
+                            colour = calculateColour(primitiveCollisions, E, l);
                         }else{
-                            colour = generateBG(px, h-py-1, w, h);
+                            colour = generateBG(E, l);
                         }
                     }
                     //cout << "Drawing to " << px << "," << h-py-1 << endl;
@@ -239,4 +293,17 @@ vec3 RenderThread::generateBG(int x, int y, int width, int height){
 	float distFromCenter = sqrt(pow(x-width/2,2) + pow(y-height/2,2));
 	float ret = distFromCenter/glm::min(height,width)*repeatTimes * 2;
 	return vec3(0,0,ret-(int)ret);
+}
+
+vec3 RenderThread::generateBG(vec4 E, vec4 P){
+    vec3 m_pos(0,0,-1000);
+    int gridSize = 100;
+    float t = (m_pos.z - E.z)/P.z;
+    vec4 p = P * t + E;
+    int tx1 = p.x / gridSize;
+    int ty1 = p.y / gridSize;
+    bool xb = tx1 % 2;
+    bool yb = ty1 % 2;
+
+    return xb^yb ? vec3(1,0,0) : vec3(0.5,0.5,0.5);
 }

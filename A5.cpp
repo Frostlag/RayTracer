@@ -14,6 +14,8 @@ extern int threads;
 extern int cwindow;
 bool super = false;
 int supersub = 4;
+float reflectionThreshold = 0.1;
+float myEpsilon = 0.1;
 BlockList *blockList;
 PhongMaterial defaultMat(vec3(0.2,0.2,0.2),vec3(0.1,0.1,0.1),40,0);
 
@@ -81,7 +83,7 @@ void A5_Render(
 		threadvector.push_back(temp);
 	}
 	cout << "Threads: " << threadvector.size() << endl;
-	if (cwindow >= 1){	
+	if (cwindow >= 1){
 		while(!window->isClosed()){
 			if (!RenderThread::WorkingThreads.empty()){
 				blockList->outputProgress();

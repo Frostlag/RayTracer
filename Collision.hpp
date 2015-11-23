@@ -14,6 +14,7 @@ struct PrimitiveCollisions{
     bool sorted = false;
     PhongMaterial* mat;
     std::string node_name;
+    unsigned int node_id;
     void addCollision(CollisionInfo collisionInfo);
     std::vector<CollisionInfo> getCollisions();
     bool isEmpty(){ return collisions.empty();}

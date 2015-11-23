@@ -535,10 +535,15 @@ int gr_new_material_cmd(lua_State* L)
 
   double shininess = luaL_checknumber(L, 3);
   double reflectivity = luaL_checknumber(L, 4);
+  double refraction[2];
+
+  get_tuple(L, 5, refraction, 2);
+  double opacity = refraction[0];
+  double ior = refraction[1];
 
   data->material = new PhongMaterial(glm::vec3(kd[0], kd[1], kd[2]),
                                      glm::vec3(ks[0], ks[1], ks[2]),
-                                     shininess, reflectivity);
+                                     shininess, reflectivity, opacity, ior);
 
   luaL_newmetatable(L, "gr.material");
   lua_setmetatable(L, -2);

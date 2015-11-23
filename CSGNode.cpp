@@ -22,7 +22,7 @@ PrimitiveCollisions UnionNode::Collide(glm::vec4 E, glm::vec4 P, glm::mat4 M){
 	bool inN1 = false, inN2 = false;
 	int cs = n1c.size() + n2c.size(), n1counter = 0, n2counter = 0;
 	if (n1c.empty()){
-		ret = n2pc; 
+		ret = n2pc;
 	}else if (n2c.empty()){
 		ret = n1pc;
 	}else{
@@ -44,7 +44,7 @@ PrimitiveCollisions UnionNode::Collide(glm::vec4 E, glm::vec4 P, glm::mat4 M){
 	}
 	if (!ret.isEmpty()){
 		ret.mat = static_cast<PhongMaterial*>(m_material);
-
+		ret.node_id = m_nodeId;
 		ret.node_name = m_name;
 	}
 
@@ -56,7 +56,7 @@ void UnionNode::reboundVolume(){
 	n1.reboundVolume();
 	n2.reboundVolume();
 	vec4 p11 = vec4(n1.boundingVolume->getPos(),1), p12 = p11 + vec4(vec3(n1.boundingVolume->getSize()),1);
-	vec4 p21 = vec4(n2.boundingVolume->getPos(),1), p22 = p21 + vec4(vec3(n2.boundingVolume->getSize()),1);	
+	vec4 p21 = vec4(n2.boundingVolume->getPos(),1), p22 = p21 + vec4(vec3(n2.boundingVolume->getSize()),1);
 	p11 = p11 * n1.get_transform();
 	p12 = p12 * n1.get_transform();
 	p21 = p21 * n2.get_transform();
@@ -109,7 +109,7 @@ PrimitiveCollisions ConjunctionNode::Collide(glm::vec4 E, glm::vec4 P, glm::mat4
 	}
 	if (!ret.isEmpty()){
 		ret.mat = static_cast<PhongMaterial*>(m_material);
-
+		ret.node_id = m_nodeId;
 		ret.node_name = m_name;
 	}
 
@@ -173,7 +173,7 @@ PrimitiveCollisions SubtractionNode::Collide(glm::vec4 E, glm::vec4 P, glm::mat4
 	}
 	if (!ret.isEmpty()){
 		ret.mat = static_cast<PhongMaterial*>(m_material);
-
+		ret.node_id = m_nodeId;
 		ret.node_name = m_name;
 	}
 
@@ -216,7 +216,7 @@ PrimitiveCollisions ExclusiveNode::Collide(glm::vec4 E, glm::vec4 P, glm::mat4 M
 	bool inN1 = false, inN2 = false;
 	int cs = n1c.size() + n2c.size(), n1counter = 0, n2counter = 0;
 	if (n1c.empty()){
-		ret = n2pc; 
+		ret = n2pc;
 	}else if (n2c.empty()){
 		ret = n1pc;
 	}else{
@@ -234,7 +234,7 @@ PrimitiveCollisions ExclusiveNode::Collide(glm::vec4 E, glm::vec4 P, glm::mat4 M
 	}
 	if (!ret.isEmpty()){
 		ret.mat = static_cast<PhongMaterial*>(m_material);
-
+		ret.node_id = m_nodeId;
 		ret.node_name = m_name;
 	}
 

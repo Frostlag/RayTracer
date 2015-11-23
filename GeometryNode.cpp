@@ -37,6 +37,7 @@ PrimitiveCollisions GeometryNode::Collide(vec4 E, vec4 P, mat4 M){
 		primitiveCollisions.mat = static_cast<PhongMaterial*>(m_material);
 
 		primitiveCollisions.node_name = m_name;
+		primitiveCollisions.node_id = m_nodeId;
 		//cout << "collide on " << m_name << " at " << to_string(collisionInfo.position) << " with d=" << collisionInfo.d << endl;
 		//cout << "normal at collision point is " << to_string(collisionInfo.normal) << endl;
 	}

@@ -1,8 +1,11 @@
-#include "Primitive.hpp"
+
 #include <iostream>
 #include <glm/ext.hpp>
-#include "polyroots.hpp"
 #include <vector>
+#include "Primitive.hpp"
+#include "polyroots.hpp"
+#include "Utilities.hpp"
+
 using namespace std;
 using namespace glm;
 
@@ -25,6 +28,7 @@ PrimitiveCollisions Sphere::Collide(  vec4 E, vec4 P, glm::mat4 M ){
 	double roots[2];
 
 	size_t result = quadraticRoots(A, B, C, roots);
+
 	if (result < 1)
 		return ret;
 
@@ -72,7 +76,7 @@ PrimitiveCollisions Cube::Collide(  vec4 E, vec4 P, glm::mat4 M ){
     tmin = glm::max(tmin,glm::min(tz1,tz2));
     tmax = glm::min(tmax,glm::max(tz1,tz2));
 
-    if (tmin > tmax){
+    if (tmin > tmax && tmin > 0 && !isnan(tmin)){
 
         return ret;
     }
@@ -121,6 +125,10 @@ PrimitiveCollisions Cube::Collide(  vec4 E, vec4 P, glm::mat4 M ){
         ret.addCollision(CollisionInfo(d, M * potentialPoint, normalize(vec4(transpose(inverse(mat3(M))) * planeInfo[i].second, 0))));
     }
 
+    if (ret.getCollisions().size() == 1){
+        // cout << "Eye was" << E << ", P was " << P << endl;
+        // cout << "One collision at " << ret.getCollisions().front().position << endl;
+    }
     return ret;
 }
 
@@ -194,7 +202,7 @@ PrimitiveCollisions NonhierBox::Collide(vec4 E, vec4 P, glm::mat4 M){
     tmin = glm::max(tmin,glm::min(tz1,tz2));
     tmax = glm::min(tmax,glm::max(tz1,tz2));
 
-    if (tmin > tmax){
+    if (tmin > tmax && tmin > 0 && !isnan(tmin)){
 
         return ret;
     }
@@ -252,7 +260,8 @@ bool NonhierBox::Bounds(vec4 E, vec4 P, glm::mat4 M){
     mat4 invM = inverse(M);
     vec4 invE = invM * E;
     vec4 invP = invM * P;
-
+    // cout << to_string(invM) << endl;
+    // cout << to_string(E) << " " << to_string(invE) << endl;
     vec3 m_pos2 = m_pos + vec3(m_size,m_size,m_size);
 
     float tx1 = (m_pos.x - invE.x)/invP.x;
@@ -272,8 +281,8 @@ bool NonhierBox::Bounds(vec4 E, vec4 P, glm::mat4 M){
 
     tmin = glm::max(tmin,glm::min(tz1,tz2));
     tmax = glm::min(tmax,glm::max(tz1,tz2));
-
-    return tmax >= tmin;
+    //cout << to_string(E) << " " << tmax << " " << tmin << endl;
+    return tmax >= tmin || tmin < 0;
 
 }
 
@@ -316,37 +325,6 @@ PrimitiveCollisions Cone::Collide(glm::vec4 E,glm::vec4 P, glm::mat4 M){
     vec4 ourPoint = (invE + ty1 * invP);
     if (pow(ourPoint.x, 2) + pow(ourPoint.z, 2) <= 1)
         ret.addCollision(CollisionInfo(ty1, E + ty1 * P, normalize(vec4(transpose(inverse(mat3(M))) * vec3(0, 1, 0), 0))));
-
-    // double t;
-    // if (result == 1){
-    //     if (roots[0] < 0)
-    //         return ret;
-    //     t = roots[0];
-    // }else{
-    //     int i = 3;
-    //     if (roots[0] < 0)
-    //         i -= 1;
-    //     if (roots[1] < 0)
-    //         i -= 2;
-    //
-    //     if (i == 3){
-    //         t = glm::min(roots[0],roots[1]);
-    //     }else if(i == 2){
-    //         t = roots[1];
-    //     }else if(i == 1){
-    //         t = roots[0];
-    //     }else if(i == 0)
-    //         return ret;
-    // }
-    // vec4 ourPoint = (invE + t * invP);
-    // if (ourPoint.y >= 0 && ourPoint.y <= 1 ){
-    //     float d = t;
-    //     ret.isValid = true;
-    //     ret.position = E + t * P;
-    //     ret.d = d;
-    //     ret.normal = normalize(vec4(transpose(inverse(mat3(M))) * vec3(ourPoint.x, -1, ourPoint.z), 0));
-    // }
-
 
 
     return ret;

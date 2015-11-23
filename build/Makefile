@@ -64,6 +64,7 @@ ifeq ($(config),release)
 endif
 
 OBJECTS := \
+	$(OBJDIR)/CSGNode.o \
 	$(OBJDIR)/GeometryNode.o \
 	$(OBJDIR)/BlockList.o \
 	$(OBJDIR)/Image.o \
@@ -81,7 +82,7 @@ OBJECTS := \
 	$(OBJDIR)/SceneNode.o \
 	$(OBJDIR)/RenderThread.o \
 	$(OBJDIR)/Collision.o \
-	$(OBJDIR)/CSGNode.o \
+	$(OBJDIR)/Utilities.o \
 
 RESOURCES := \
 
@@ -142,6 +143,9 @@ $(GCH): $(PCH)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 endif
 
+$(OBJDIR)/CSGNode.o: ../CSGNode.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/GeometryNode.o: ../GeometryNode.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
@@ -193,7 +197,7 @@ $(OBJDIR)/RenderThread.o: ../RenderThread.cpp
 $(OBJDIR)/Collision.o: ../Collision.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/CSGNode.o: ../CSGNode.cpp
+$(OBJDIR)/Utilities.o: ../Utilities.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
