@@ -1,5 +1,5 @@
 
-newmat2 = gr.new_material({1, 0, 0}, {1, 1, 1}, 25, 0, {0.4, 1})
+newmat2 = gr.new_material({1, 0, 0}, {1, 1, 1}, 25, 0, {0.4, 2})
 
 mat1 = gr.material({0.7, 1.0, 0.7}, {0.5, 0.7, 0.5}, 25)
 
@@ -11,8 +11,8 @@ mat4 = gr.material({0.7, 0.6, 1.0}, {0.5, 0.4, 0.8}, 25)
 wallmat = gr.material({0.5, 0.5, 0.5}, {0,0,0}, 25)
 scene_root = gr.node('root')
 
-t1 = gr.sphere('mirror')
---s1:translate(-0.5,-0.5,0)
+t1 = gr.cube('mirror')
+t1:translate(-0.5,-0.5,0)
 t1:scale(100,100,100)
 t1:translate(0,0,1000)
 scene_root:add_child(t1)

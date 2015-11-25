@@ -7,6 +7,8 @@ struct CollisionInfo{
   glm::vec4 position;
   glm::vec4 normal;
   float d;
+  bool useTexture;
+  glm::vec3 kd;
   CollisionInfo(float d, glm::vec4 position, glm::vec4 normal);
 };
 

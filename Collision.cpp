@@ -20,6 +20,6 @@ vector<CollisionInfo> PrimitiveCollisions::getCollisions(){
 }
 
 
-CollisionInfo::CollisionInfo(float d, glm::vec4 position, glm::vec4 normal):position(position), normal(normal), d(d){
+CollisionInfo::CollisionInfo(float d, glm::vec4 position, glm::vec4 normal):position(position), normal(normal), d(d), useTexture(false),kd(glm::vec3(0)){
 
 }

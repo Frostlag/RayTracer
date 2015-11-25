@@ -13,6 +13,7 @@ public:
 		Material *mat = nullptr );
 
 	void setMaterial( Material *material );
+	void setTexture(Texture *texture);
 
 	Material *m_material;
 	Primitive *m_primitive;

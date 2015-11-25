@@ -4,6 +4,7 @@
 gold = gr.material({0.9, 0.8, 0.4}, {0.8, 0.8, 0.4}, 25)
 grass = gr.material({0.1, 0.7, 0.1}, {0.0, 0.0, 0.0}, 0)
 blue = gr.material({0.7, 0.6, 1}, {0.5, 0.4, 0.8}, 25)
+tex1 = gr.texture("colour-grid.png")
 
 scene = gr.node('scene')
 scene:rotate('X', 23)
@@ -25,13 +26,14 @@ arc:add_child(p2)
 p2:set_material(gold)
 p2:scale(0.8, 4, 0.8)
 p2:translate(1.6, 0, -0.4)
+p2:set_texture(tex1)
 
 s = gr.sphere('s')
 arc:add_child(s)
 s:set_material(gold)
 s:scale(4, 0.6, 0.6)
 s:translate(0, 4, 0)
-
+s:set_texture(tex1)
 -- the floor
 plane = gr.mesh( 'plane', 'Assets/plane.obj' )
 scene:add_child(plane)

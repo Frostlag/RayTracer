@@ -60,3 +60,10 @@ void GeometryNode::reboundVolume(){
 	float diffmax = glm::max(diff.x,diff.y,diff.z);
 	boundingVolume = new NonhierBox(vec3(min) - vec3(1), diffmax + 1);
 }
+
+void GeometryNode::setTexture(Texture *texture){
+	if (texture == NULL || !texture->isValid() || m_primitive == NULL)
+		return;
+	m_primitive->setTexture(texture);
+
+}

@@ -3,13 +3,20 @@
 #include <glm/glm.hpp>
 #include <functional>
 #include "Collision.hpp"
+#include "Texture.hpp"
 class SceneNode;
 
 class Primitive {
+protected:
+  Primitive();
+  Texture *texture;
 public:
   virtual PrimitiveCollisions Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M) = 0;
   virtual std::pair<glm::vec4,glm::vec4> getBounds() = 0;
   virtual ~Primitive();
+
+  void setTexture(Texture *texture);
+
 };
 
 class Sphere : public Primitive {
@@ -76,4 +83,3 @@ public:
   virtual ~Cylinder();
   virtual std::pair<glm::vec4,glm::vec4> getBounds();
 };
-

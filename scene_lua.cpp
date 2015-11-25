@@ -55,9 +55,13 @@
 #include "PhongMaterial.hpp"
 #include "A5.hpp"
 #include "CSGNode.hpp"
+#include "Texture.hpp"
 
 typedef std::map<std::string,Mesh*> MeshMap;
 static MeshMap mesh_map;
+
+typedef std::map<std::string,Texture*> TextureMap;
+static TextureMap texture_map;
 
 // Uncomment the following line to enable debugging messages
 // #define GRLUA_ENABLE_DEBUG
@@ -93,6 +97,10 @@ struct gr_node_ud {
 // allocated by Lua to represent materials.
 struct gr_material_ud {
   Material* material;
+};
+
+struct gr_texture_ud {
+  Texture* texture;
 };
 
 // The "userdata" type for a light. Objects of this type will be
@@ -408,6 +416,7 @@ int gr_mesh_cmd(lua_State* L)
 
 	if( i == mesh_map.end() ) {
 		mesh = new Mesh( obj_fname );
+		mesh_map[sfname] = mesh;
 	} else {
 		mesh = i->second;
 	}
@@ -551,6 +560,34 @@ int gr_new_material_cmd(lua_State* L)
   return 1;
 }
 
+// Create a new texture
+extern "C"
+int gr_texture_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_texture_ud* data = (gr_texture_ud*)lua_newuserdata(L, sizeof(gr_texture_ud));
+  data->texture = 0;
+
+  const char* fname = luaL_checkstring(L, 1);
+
+  std::string sfname( fname );
+
+  // Use a dictionary structure to make sure every mesh is loaded
+  // at most once.
+  auto i = texture_map.find( sfname );
+  Texture* texture = nullptr;
+
+  texture = new Texture( sfname );
+
+
+  data->texture = texture;
+  luaL_newmetatable(L, "gr.texture");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
 // Add a child to a node
 extern "C"
 int gr_node_add_child_cmd(lua_State* L)
@@ -594,6 +631,30 @@ int gr_node_set_material_cmd(lua_State* L)
 
   return 0;
 }
+
+// Set a node's texture
+extern "C"
+int gr_node_set_texture_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_node_ud* selfdata = (gr_node_ud*)luaL_checkudata(L, 1, "gr.node");
+  luaL_argcheck(L, selfdata != 0, 1, "Node expected");
+
+  GeometryNode* self = dynamic_cast<GeometryNode*>(selfdata->node);
+
+  luaL_argcheck(L, self != 0, 1, "Geometry node expected");
+
+  gr_texture_ud* texdata = (gr_texture_ud*)luaL_checkudata(L, 2, "gr.texture");
+  luaL_argcheck(L, texdata != 0, 2, "Texture expected");
+
+  Texture* texture = texdata->texture;
+
+  self->setTexture(texture);
+
+  return 0;
+}
+
 
 // Add a scaling transformation to a node.
 extern "C"
@@ -695,6 +756,7 @@ static const luaL_Reg grlib_functions[] = {
   {"joint", gr_joint_cmd},
   {"material", gr_material_cmd},
   {"new_material", gr_new_material_cmd},
+  {"texture", gr_texture_cmd},
   // New for assignment 4
   {"cube", gr_cube_cmd},
   {"cone", gr_cone_cmd},
@@ -727,6 +789,7 @@ static const luaL_Reg grlib_node_methods[] = {
   {"__gc", gr_node_gc_cmd},
   {"add_child", gr_node_add_child_cmd},
   {"set_material", gr_node_set_material_cmd},
+  {"set_texture", gr_node_set_texture_cmd},
   {"scale", gr_node_scale_cmd},
   {"rotate", gr_node_rotate_cmd},
   {"translate", gr_node_translate_cmd},

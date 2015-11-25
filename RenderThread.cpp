@@ -64,8 +64,12 @@ vec3 RenderThread::calculateColour(PrimitiveCollisions primitiveCollisions, vec4
     PhongMaterial* mat = primitiveCollisions.mat;
 	if (mat == NULL)
 		mat = &defaultMat;
+	vec3 kd = mat->getKD();
+	if(collisionInfo.useTexture)
+		kd = collisionInfo.kd;
+		
+	ret = ambient * kd * mat->getOpacity();
 
-	ret = ambient * mat->getKD() * mat->getOpacity();
 	if (mat->getReflectivity() > 0)
         ret += calculateReflection(primitiveCollisions, E, P, adds);
     if (mat->getOpacity() < 1)
@@ -82,6 +86,9 @@ vec3 RenderThread::calculateLighting(PrimitiveCollisions primitiveCollisions, ve
 		float c1 = 1, c2 = 1, c3 = 1;
 		return 1/(falloff[0] + falloff[1] * r + falloff[2] * r * r);
 	};
+	vec3 kd = primitiveCollisions.mat->getKD();
+	if(collisionInfo.useTexture)
+		kd = collisionInfo.kd;
     for( Light * light : lights){
 		vec4 l = normalize(vec4(light->position,1) - collisionInfo.position);
 		vec4 myEye = collisionInfo.position + l;
@@ -99,7 +106,6 @@ vec3 RenderThread::calculateLighting(PrimitiveCollisions primitiveCollisions, ve
 		vec4 v = normalize(-P);
 		float n_dot_l = glm::max(dot(collisionInfo.normal, l),0.0f);
 		vec3 lightColor = light->colour;
-		vec3 kd = primitiveCollisions.mat->getKD();
 		vec3 diffuse = kd * n_dot_l;
 
 		vec3 specular = vec3(0.0);

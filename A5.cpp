@@ -1,11 +1,17 @@
 #include <glm/ext.hpp>
 #include <thread>
 #include <vector>
+
 #include "A5.hpp"
 #include "GeometryNode.hpp"
 #include "BlockList.hpp"
 #include "Window.hpp"
 #include "RenderThread.hpp"
+#include "cs488-framework/OpenGLImport.hpp"
+#include "cs488-framework/ShaderProgram.hpp"
+#include "cs488-framework/GlErrorCheck.hpp"
+
+#include <GL/glut.h>
 using namespace std;
 using namespace glm;
 
@@ -46,9 +52,21 @@ void A5_Render(
 	vec3 u = (normalize(up * gridHeight)) / image.height();
 	vec3 r = (normalize(cross(up,vec3(0,0,n)) * gridWidth) / image.width());
 
-
 	int h = image.height();
 	int w = image.width();
+
+	//gl3wInit();
+	//GLuint FramebufferName = 0;
+	//glGenFramebuffers(1, &FramebufferName);
+	//glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+	//glViewport(0,0,w,h);
+	//GLUquadric* quadric = gluNewQuadric();
+	//gluSphere(quadric, 10,10,10);
+	//glFlush();
+	//glFinish();
+	//CHECK_GL_ERRORS;
+
+
 
 	Window *window;
 

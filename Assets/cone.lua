@@ -3,23 +3,25 @@
 mat1 = gr.material({0.7, 1.0, 0.7}, {0.5, 0.7, 0.5}, 25)
 mat2 = gr.material({0.5, 0.5, 0.5}, {0.5, 0.7, 0.5}, 25)
 mat3 = gr.material({1.0, 0.6, 0.1}, {0.5, 0.7, 0.5}, 25)
-
+tex1 = gr.texture("colour-grid.png")
 scene_root = gr.node('root')
 
-s1 = gr.cube('cylinder')
+s1 = gr.cone('cylinder')
 s1:scale(100,100,100)
 s1:translate(-20,-10,-10)
 --scene_root:add_child(s1)
 s1:set_material(mat1)
+s1:set_texture(tex1);
 
-s2 = gr.cube('cylinder')
-s2:scale(50,500,50)
-s2:translate(20,-10,-10)
+s2 = gr.cylinder('cylinder')
+s2:scale(50,150,50)
+s2:translate(50,-10,-10)
 --scene_root:add_child(s2)
 s2:set_material(mat1)
+s2:set_texture(tex1);
 
-u1 = gr.conjunction('conjunction',s1,s2)
-u1:rotate("x",45)
+u1 = gr.union('conjunction',s1,s2)
+u1:rotate("x",-45)
 u1:set_material(mat2)
 scene_root:add_child(u1)
 
