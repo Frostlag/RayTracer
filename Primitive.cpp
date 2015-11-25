@@ -20,7 +20,6 @@ Primitive::~Primitive()
 void Primitive::setTexture(Texture *texture){
     if(texture == NULL || !texture->isValid())
         return;
-    cout << "setting texture " << texture << endl;
     this->texture = texture;
 }
 
@@ -350,10 +349,12 @@ PrimitiveCollisions Cone::Collide(glm::vec4 E,glm::vec4 P, glm::mat4 M){
         vec4 ourPoint = (invE + roots[i] * invP);
 
         if (ourPoint.y >= 0 && ourPoint.y <= 1 ){
-            CollisionInfo temp = CollisionInfo(roots[i], E + roots[i] * P, normalize(vec4(transpose(inverse(mat3(M))) * vec3(ourPoint.x, -1, ourPoint.z), 0)));
+            vec3 temp2 = normalize(vec3(ourPoint.x, 0, ourPoint.z));
+            temp2.y = -1;
+            CollisionInfo temp = CollisionInfo(roots[i], E + roots[i] * P, normalize(vec4(transpose(inverse(mat3(M))) * temp2, 0)));
             if (texture != NULL && texture->isValid()){
                 temp.useTexture = true;
-                vec4 normal = normalize(invE + roots[i] * invP - center);
+                vec4 normal = normalize(ourPoint - center);
                 temp.kd = texture->getColour(0.5 + atan(normal.z, normal.x) / (pi<float>() * 2), 0.5 - asin(normal.y) / pi<float>());
             }
             ret.addCollision(temp);
@@ -411,7 +412,7 @@ PrimitiveCollisions Cylinder::Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M ){
             CollisionInfo temp = CollisionInfo(roots[i], E + roots[i] * P, normalize(vec4(transpose(inverse(mat3(M))) * vec3(ourPoint.x, -1, ourPoint.z), 0)));
             if (texture != NULL && texture->isValid()){
                 temp.useTexture = true;
-                vec4 normal = normalize(invE + roots[i] * invP - center);
+                vec4 normal = normalize(ourPoint - center);
                 temp.kd = texture->getColour(0.5 + atan(normal.z, normal.x) / (pi<float>() * 2), 0.5 - asin(normal.y) / pi<float>());
             }
             ret.addCollision(temp);

@@ -23,7 +23,7 @@ Texture::Texture(const string filename){
 }
 
 vec3 Texture::getColour(unsigned x, unsigned y){
-	if (x >= width || y >= height)
+	if (x > width || y > height)
 		throw string("Requested pixel outside of texture");
 	unsigned base = (y * width + x) * 4;
 	// vec3 ret = vec3(image[base], image[base+1], image[base+2]);

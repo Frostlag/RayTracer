@@ -33,13 +33,13 @@ RenderThread::~RenderThread(){
 
 PrimitiveCollisions RenderThread::traverseScene(SceneNode * root, vec4 E, vec4 P, mat4 M){
 	PrimitiveCollisions ret = PrimitiveCollisions();
-// #ifndef NOBOUNDING
+#ifndef NOBOUNDING
 	if (!root->BoundingVolumeCollide(E, P, M)){
         //cout << "Bounding Miss" << endl;
 		return ret;
 
     }
-// #endif
+#endif
 	ret = root->Collide(E, P, M);
 
 	for (SceneNode* children : root->children){
@@ -67,7 +67,7 @@ vec3 RenderThread::calculateColour(PrimitiveCollisions primitiveCollisions, vec4
 	vec3 kd = mat->getKD();
 	if(collisionInfo.useTexture)
 		kd = collisionInfo.kd;
-		
+
 	ret = ambient * kd * mat->getOpacity();
 
 	if (mat->getReflectivity() > 0)
@@ -132,7 +132,7 @@ vec3 RenderThread::calculateReflection(PrimitiveCollisions primitiveCollisions, 
     vec4 newE = first.position + newP;
     PrimitiveCollisions newCollisions = traverseScene(root, newE, newP, mat4());
     if (!newCollisions.isEmpty()){
-        vec3 newColour = calculateColour(newCollisions, newE, newP, adds * reflectivity * length(primitiveCollisions.mat->getKD()) / 3);
+        vec3 newColour = calculateColour(newCollisions, newE, newP, adds * reflectivity * length(primitiveCollisions.mat->getKS()) / 3);
         ret += reflectivity * newColour * primitiveCollisions.mat->getKS();
     }
     return ret;

@@ -3,6 +3,8 @@
 
 
 #include <glm/ext.hpp>
+#include "Utilities.hpp"
+
 using namespace glm;
 using namespace std;
 // #include "cs488-framework/ObjFileDecoder.hpp"
@@ -14,16 +16,41 @@ Mesh::Mesh( const std::string& fname )
 {
 	std::string code;
 	double vx, vy, vz;
-	size_t s1, s2, s3;
+	size_t s1, s2, s3, n1, n2, n3, t1, t2, t3;
 
 	std::ifstream ifs( fname.c_str() );
 	while( ifs >> code ) {
+		//cout << code << endl;
 		if( code == "v" ) {
 			ifs >> vx >> vy >> vz;
 			m_vertices.push_back( glm::vec3( vx, vy, vz ) );
+		} else if( code == "vn" ) {
+			ifs >> vx >> vy >> vz;
+			m_normals.push_back( glm::vec3( vx, vy, vz ) );
+		} else if( code == "vt" ) {
+			ifs >> vx >> vy;
+			m_textures.push_back( glm::vec2( vx, vy ) );
 		} else if( code == "f" ) {
-			ifs >> s1 >> s2 >> s3;
-			m_faces.push_back( Triangle( s1 - 1, s2 - 1, s3 - 1 ) );
+			ifs >> s1;
+			ifs.ignore(1,'/');
+			ifs >> t1;
+			ifs.ignore(1,'/');
+			ifs >> n1;
+
+			ifs >> s2;
+			ifs.ignore(1,'/');
+			ifs >> t2;
+			ifs.ignore(1,'/');
+			ifs >> n2;
+
+			ifs >> s3;
+			ifs.ignore(1,'/');
+			ifs >> t3;
+			ifs.ignore(1,'/');
+			ifs >> n3;
+			m_faces.push_back( Triangle( s1 - 1, s2 - 1, s3 - 1, n1 - 1, n2 - 1, n3 - 1, t1 - 1, t2 - 1, t3 - 1) );
+			if (s2 == s3 && s1 == s2)
+				throw "ASDSDFSDF";
 		}
 	}
 }
@@ -62,6 +89,13 @@ PrimitiveCollisions Mesh::Collide(vec4 E, vec4 P, glm::mat4 M){
 		vec3 v3 = m_vertices[m_faces[i].v3];
 		vec3 normal = normalize(cross(v2 - v1, v3 - v1));
 		float d = dot(vec4(v1,1) -  invE, vec4(normal,0)) / dot(invP, vec4(normal,0));
+		// if (isnan(d)){
+		// 	cout << m_faces[i].v1 << " " << m_faces[i].v2 << " " << m_faces[i].v3 << endl;
+		// 	cout << v1 << " " << v2 << " " << v3 << endl;
+		// 	cout << v2 - v1 << " " << v3 - v1 << endl;
+		// 	cout << cross(v2 - v1, v3 - v1) << endl;
+		// }
+
 		vector<vec3> points = {v1, v2, v3};
 		vector<vec3> normals = {
 			-normalize(cross(v2 - v1, normal)),
@@ -69,22 +103,38 @@ PrimitiveCollisions Mesh::Collide(vec4 E, vec4 P, glm::mat4 M){
 			-normalize(cross(v1 - v3, normal))
 		};
 		if (d <= 0) continue;
-		vec4 potentialPoint = invE + d * invP;
+		vec3 potentialPoint = vec3(invE + d * invP);
+
 		bool isIn = true;
+		float t;
 		for ( int j = 0; j < 3; j++){
-			float t = dot(vec3(potentialPoint) - points[j], normals[j]);
-			if (t < 0) {
+
+			t = dot(potentialPoint - points[j], normals[j]);
+			if (t < 0 || isnan(t)) {
 				isIn = false;
 				break;
-			}else{
-				//cout << to_string(potentialPoint) << " " << to_string(squareInfo[i].first[j]) << endl;
 			}
 		}
+
 		if (!isIn)
 			continue;
-		//std::cout << "IN FACE" << std::endl;
 
-		ret.addCollision(CollisionInfo(d, E + d * P, normalize(vec4(transpose(inverse(mat3(M))) * normal, 0))));
+		CollisionInfo temp = CollisionInfo(d, E + d * P, normalize(vec4(transpose(inverse(mat3(M))) * normal, 0)));
+		if (texture != NULL && texture->isValid()){
+			vec3 f1 = v1 - potentialPoint;
+			vec3 f2 = v2 - potentialPoint;
+			vec3 f3 = v3 - potentialPoint;
+			float a = length(cross(-v2 + v1, -v3 + v1));
+			float a1 = length(cross(f2, f3)) / a;
+			float a2 = length(cross(f3, f1)) / a;
+			float a3 = length(cross(f1, f2)) / a;
+			vec2 uv = m_textures[m_faces[i].t1] * a1 + m_textures[m_faces[i].t2] * a2 + m_textures[m_faces[i].t3] * a3;
+			temp.useTexture = true;
+			temp.kd = texture->getColour(uv.x,1-uv.y);
+
+		}
+
+		ret.addCollision(temp);
 	}
 	return ret;
 }
