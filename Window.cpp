@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include "Window.hpp"
+#include <GLFW/glfw3.h>
 #include "RenderThread.hpp"
 #include "cs488-framework/GlErrorCheck.hpp"
 
@@ -78,7 +79,7 @@ void Window::tick(){
     glfwPollEvents();
     changeTexture();
     draw();
-    if (glfwWindowShouldClose(window) || RenderThread::WorkingThreads.empty()){
+    if (glfwWindowShouldClose(window) && RenderThread::WorkingThreads.empty()){
         closed = true;
         glfwDestroyWindow(window);
     }

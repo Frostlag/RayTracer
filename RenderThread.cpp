@@ -59,9 +59,9 @@ vec3 RenderThread::calculateColour(PrimitiveCollisions primitiveCollisions, vec4
 	if (primitiveCollisions.isEmpty())
 		return ret;
 
-    CollisionInfo collisionInfo = primitiveCollisions.getCollisions().front();
+  CollisionInfo collisionInfo = primitiveCollisions.getCollisions().front();
 
-    PhongMaterial* mat = primitiveCollisions.mat;
+  PhongMaterial* mat = primitiveCollisions.mat;
 	if (mat == NULL)
 		mat = &defaultMat;
 	vec3 kd = mat->getKD();
@@ -71,11 +71,13 @@ vec3 RenderThread::calculateColour(PrimitiveCollisions primitiveCollisions, vec4
 	ret = ambient * kd * mat->getOpacity();
 
 	if (mat->getReflectivity() > 0)
-        ret += calculateReflection(primitiveCollisions, E, P, adds);
-    if (mat->getOpacity() < 1)
-        ret += calculateRefraction(primitiveCollisions, E, P, adds);
-
-    ret += calculateLighting(primitiveCollisions, E, P);
+      ret += calculateReflection(primitiveCollisions, E, P, adds);
+  if (mat->getOpacity() < 1){
+      //float r0 = pow((1 - mat->getIOR()) / (1 + mat->getIOR()), 2);
+      //float rshlick = r0 + (1 - r0) * pow(1 - dot(E, collisionInfo.normal, 5));
+      ret += calculateRefraction(primitiveCollisions, E, P, adds);
+  }
+  ret += calculateLighting(primitiveCollisions, E, P);
 	return glm::min(ret,1.0f);
 }
 
@@ -88,7 +90,7 @@ vec3 RenderThread::calculateLighting(PrimitiveCollisions primitiveCollisions, ve
 	};
 	vec3 kd = primitiveCollisions.mat->getKD();
 	if(collisionInfo.useTexture)
-		kd = collisionInfo.kd;
+    kd = collisionInfo.kd;
     for( Light * light : lights){
 		vec4 l = normalize(vec4(light->position,1) - collisionInfo.position);
 		vec4 myEye = collisionInfo.position + l;

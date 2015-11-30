@@ -12,6 +12,7 @@
 #include "cs488-framework/GlErrorCheck.hpp"
 
 #include <GL/glut.h>
+#include <GLFW/glfw3.h>
 using namespace std;
 using namespace glm;
 
@@ -55,18 +56,43 @@ void A5_Render(
 	int h = image.height();
 	int w = image.width();
 
-	//gl3wInit();
-	//GLuint FramebufferName = 0;
-	//glGenFramebuffers(1, &FramebufferName);
-	//glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
-	//glViewport(0,0,w,h);
-	//GLUquadric* quadric = gluNewQuadric();
-	//gluSphere(quadric, 10,10,10);
-	//glFlush();
-	//glFinish();
-	//CHECK_GL_ERRORS;
+    if (glfwInit() == GL_FALSE)
+        throw string("Not able to create window");
 
+    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+    GLFWwindow* window2 = glfwCreateWindow(h, w,
+        "A5", NULL, NULL);
 
+    glfwMakeContextCurrent(window2);
+
+    gl3wInit();
+    glClearColor( 0.1, 0.1, 0.1, 1.0 );
+    ShaderProgram m_shader;
+    m_shader.generateProgramObject();
+    //m_shader.attachVertexShader("Assets/fhvertex.s");
+    m_shader.attachFragmentShader("Assets/fhfragment.s");
+    m_shader.link();
+
+	GLuint FramebufferName = 0;
+	glGenFramebuffers(1, &FramebufferName);
+	glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+	glViewport(0,0,w,h);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    while (!glfwWindowShouldClose(window2)){
+        glViewport(0,0,w,h);
+        glfwWaitEvents();
+        glfwPollEvents();
+        m_shader.enable();
+    	   GLUquadric* quadric = gluNewQuadric();
+    	   gluSphere(quadric, 1,200,200);
+           CHECK_GL_ERRORS;
+        	glFlush();
+        	glFinish();
+        m_shader.disable();
+    	CHECK_GL_ERRORS;
+        glfwSwapBuffers(window2);
+    }
 
 	Window *window;
 
