@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <glm/ext.hpp>
+#include <glm/gtx/norm.hpp>
 #include <vector>
 #include "Primitive.hpp"
 #include "polyroots.hpp"
@@ -483,5 +484,71 @@ void Cylinder::draw(mat4 M, unsigned int nodeId){
 }
 
 Cylinder::~Cylinder(){
+
+}
+
+PrimitiveCollisions Torus::Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M ){
+  PrimitiveCollisions ret;
+  mat4 invM = inverse(M);
+  vec4 invE = invM * E;
+  vec4 invP = invM * P;
+
+  const double T = 4.0 * outerRadius * outerRadius;
+  const double G = T * (invP.x * invP.x + invP.z * invP.z);
+  const double H = 2.0 * T * (invE.x * invP.x + invE.z * invP.z);
+  const double I = T * (invE.x * invE.x + invE.z * invE.z);
+  const double J = length2(invP);
+  const double K = 2.0 * dot(invE, invP);
+  const double L = length2(invE) + outerRadius*outerRadius - innerRadius*innerRadius;
+  const double JJ = J * J;
+
+	double roots[4];
+  // cout << "T: " << T << endl;
+  // cout << "G: " << G << endl;
+  // cout << "H: " << H << endl;
+  // cout << "I: " << I << endl;
+  // cout << "J: " << J << endl;
+  // cout << "K: " << K << endl;
+  // cout << "L: " << L << endl;
+	size_t result = quarticRoots(2.0 * K / J, (2.0 * J * L + K * K - G) / JJ, (2.0 * K * L - H) / JJ, (L * L - I) / JJ, roots);
+  if (result < 1)
+      return ret;
+
+  vec4 center = vec4(0,0,0,1);
+
+  for (int i = 0; i < result; i++){
+      // cout << roots[i] << endl;
+      // cout << E + roots[i] * P << endl;
+      if (roots[i] <= 0) continue;
+      vec4 ourPoint = (invE + roots[i] * invP);
+      vec3 Q = normalize(vec3(ourPoint.x,0, ourPoint.z)) * outerRadius;
+      vec3 normal = normalize(vec3(ourPoint) - Q);
+      CollisionInfo temp = CollisionInfo(roots[i], E + roots[i] * P, normalize(vec4(transpose(inverse(mat3(M))) * normal, 0)));
+
+
+
+      if (texture != NULL && texture->isValid()){
+          temp.useTexture = true;
+          vec4 normal = normalize(ourPoint - center);
+          temp.kd = texture->getColour(0.5 + atan(normal.z, normal.x) / (pi<float>() * 2), 0.5 - asin(normal.y) / pi<float>());
+      }
+      ret.addCollision(temp);
+  }
+
+
+  return ret;
+}
+
+
+pair<vec4, vec4> Torus::getBounds(){
+    return {vec4(-innerRadius-outerRadius,-innerRadius-outerRadius,-innerRadius,1),vec4(innerRadius+outerRadius,innerRadius+outerRadius,innerRadius,1)};
+}
+
+void Torus::draw(mat4 M, unsigned int nodeId){
+
+
+}
+
+Torus::~Torus(){
 
 }

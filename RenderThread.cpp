@@ -38,7 +38,7 @@ PrimitiveCollisions RenderThread::traverseScene(SceneNode * root, vec4 E, vec4 P
         //cout << "Bounding Miss" << endl;
 		return ret;
 
-    }
+  }
 #endif
 	ret = root->Collide(E, P, M);
 
@@ -58,7 +58,7 @@ vec3 RenderThread::calculateColour(PrimitiveCollisions primitiveCollisions, vec4
 
 	if (primitiveCollisions.isEmpty())
 		return ret;
-
+  //cout << primitiveCollisions.node_name << endl;
   CollisionInfo collisionInfo = primitiveCollisions.getCollisions().front();
 
   PhongMaterial* mat = primitiveCollisions.mat;

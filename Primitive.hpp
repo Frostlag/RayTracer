@@ -87,3 +87,16 @@ public:
   virtual std::pair<glm::vec4,glm::vec4> getBounds();
   virtual void draw(glm::mat4 M, unsigned nodeId);
 };
+
+class Torus: public Primitive {
+  float innerRadius, outerRadius;
+public:
+  Torus(double i, double o)
+    :innerRadius(i), outerRadius(o)
+  {
+  }
+  virtual PrimitiveCollisions Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M );
+  virtual ~Torus();
+  virtual std::pair<glm::vec4,glm::vec4> getBounds();
+  virtual void draw(glm::mat4 M, unsigned nodeId);
+};
