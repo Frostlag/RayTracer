@@ -20,4 +20,5 @@ public:
 
 	virtual PrimitiveCollisions Collide(glm::vec4 E, glm::vec4 P, glm::mat4 M);
 	virtual void reboundVolume();
+	virtual void draw(glm::mat4 M);
 };

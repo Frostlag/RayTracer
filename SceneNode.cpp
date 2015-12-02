@@ -186,3 +186,9 @@ PrimitiveCollisions SceneNode::Collide(vec4 E, vec4 P, mat4 M){
 	return ret;
 }
 
+void SceneNode::draw(mat4 M){
+
+    for(SceneNode* child: children){
+        child->draw(M * get_transform());
+    }
+}

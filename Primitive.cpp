@@ -23,6 +23,11 @@ void Primitive::setTexture(Texture *texture){
     this->texture = texture;
 }
 
+void Sphere::draw(mat4 M, unsigned int nodeId){
+
+
+}
+
 PrimitiveCollisions Sphere::Collide(  vec4 E, vec4 P, glm::mat4 M ){
     PrimitiveCollisions ret;
     vec4 center = vec4(0,0,0,1);
@@ -153,6 +158,10 @@ pair<glm::vec4,glm::vec4> Cube::getBounds(){
 	return {vec4(0,0,0,1), vec4(1,1,1,1)};
 }
 
+void Cube::draw(mat4 M, unsigned int nodeId){
+
+
+}
 
 Cube::~Cube()
 {
@@ -195,6 +204,11 @@ PrimitiveCollisions NonhierSphere::Collide(  vec4 E, vec4 P, glm::mat4 M ){
 
 pair<glm::vec4,glm::vec4> NonhierSphere::getBounds(){
 	return {vec4(m_pos - vec3(m_radius),1),vec4(m_pos + vec3(m_radius),1)};
+}
+
+void NonhierSphere::draw(mat4 M, unsigned int nodeId){
+
+
 }
 
 NonhierSphere::~NonhierSphere()
@@ -322,6 +336,11 @@ pair<glm::vec4,glm::vec4> NonhierBox::getBounds(){
 	return {vec4(m_pos,1),vec4(m_pos +  vec3(m_size),1)};
 }
 
+void NonhierBox::draw(mat4 M, unsigned int nodeId){
+
+
+}
+
 NonhierBox::~NonhierBox()
 {
 }
@@ -380,6 +399,11 @@ PrimitiveCollisions Cone::Collide(glm::vec4 E,glm::vec4 P, glm::mat4 M){
 
 pair<vec4, vec4> Cone::getBounds(){
     return {vec4(-1,0,-1,1),vec4(1)};
+}
+
+void Cone::draw(mat4 M, unsigned int nodeId){
+
+
 }
 
 Cone::~Cone(){
@@ -451,6 +475,11 @@ PrimitiveCollisions Cylinder::Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M ){
 
 pair<vec4, vec4> Cylinder::getBounds(){
     return {vec4(-1,-1,-1,1),vec4(1)};
+}
+
+void Cylinder::draw(mat4 M, unsigned int nodeId){
+
+
 }
 
 Cylinder::~Cylinder(){

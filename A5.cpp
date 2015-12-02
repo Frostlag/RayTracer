@@ -55,7 +55,9 @@ void A5_Render(
 
 	int h = image.height();
 	int w = image.width();
+	mat4 V = glm::lookAt(eye, view, up);
 
+	/*
     if (glfwInit() == GL_FALSE)
         throw string("Not able to create window");
 
@@ -69,9 +71,18 @@ void A5_Render(
     glClearColor( 0.1, 0.1, 0.1, 1.0 );
     ShaderProgram m_shader;
     m_shader.generateProgramObject();
-    //m_shader.attachVertexShader("Assets/fhvertex.s");
+    m_shader.attachVertexShader("Assets/fhvertex.s");
     m_shader.attachFragmentShader("Assets/fhfragment.s");
     m_shader.link();
+	GLuint P_uni = m_shader.getUniformLocation( "P" );
+	GLuint V_uni = m_shader.getUniformLocation( "V" );
+	GLuint M_uni = m_shader.getUniformLocation( "M" );
+	GLuint C_uni = m_shader.getUniformLocation( "C" );
+
+	mat4 proj = glm::perspective(
+		(float)glm::radians( fovy ),
+		float( w ) / float( h ),
+		0.1f, 10000.0f );
 
 	GLuint FramebufferName = 0;
 	glGenFramebuffers(1, &FramebufferName);
@@ -84,23 +95,29 @@ void A5_Render(
         glfwWaitEvents();
         glfwPollEvents();
         m_shader.enable();
-    	   GLUquadric* quadric = gluNewQuadric();
-    	   gluSphere(quadric, 1,200,200);
-           CHECK_GL_ERRORS;
-        	glFlush();
-        	glFinish();
+			glEnable(GL_DEPTH_TEST);
+
+			glUniformMatrix4fv( P_uni, 1, GL_FALSE, value_ptr( proj ) );
+			glUniformMatrix4fv( V_uni, 1, GL_FALSE, value_ptr( V ) );
+
+			root->draw(mat4());
+
+
+
+			CHECK_GL_ERRORS;
+
         m_shader.disable();
     	CHECK_GL_ERRORS;
         glfwSwapBuffers(window2);
     }
-
+	return;
+	*/
 	Window *window;
 
 	if (cwindow > 0){
 		window = new Window(h, w, image);
 	}
 
-	mat4 V = lookAt(eye, view, up);
 	mat4 invV = inverse(V);
 	//cout << to_string(V) << endl;
 	//cout << to_string(invV) << endl;

@@ -67,3 +67,8 @@ void GeometryNode::setTexture(Texture *texture){
 	m_primitive->setTexture(texture);
 
 }
+
+void GeometryNode::draw(glm::mat4 M){
+	m_primitive->draw(M, m_nodeId);
+	SceneNode::draw(M);
+}

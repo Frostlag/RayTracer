@@ -31,6 +31,7 @@ class Mesh : public Primitive {
 public:
   Mesh( const std::string& fname );
   virtual PrimitiveCollisions Collide( glm::vec4 E, glm::vec4 P, glm::mat4 M);
+  virtual void draw(glm::mat4 M, unsigned int nodeId);
 private:
 	std::vector<glm::vec3> m_vertices;
 	std::vector<glm::vec3> m_normals;

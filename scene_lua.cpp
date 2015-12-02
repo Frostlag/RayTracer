@@ -249,32 +249,6 @@ int gr_subtraction_cmd(lua_State* L)
   return 1;
 }
 
-// Create a exclusive node
-extern "C"
-int gr_exclusive_cmd(lua_State* L)
-{
-  GRLUA_DEBUG_CALL;
-
-  gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
-
-  const char* name = luaL_checkstring(L, 1);
-
-  gr_node_ud* childdata1 = (gr_node_ud*)luaL_checkudata(L, 2, "gr.node");
-  luaL_argcheck(L, childdata1 != 0, 2, "Node expected");
-
-  gr_node_ud* childdata2 = (gr_node_ud*)luaL_checkudata(L, 3, "gr.node");
-  luaL_argcheck(L, childdata2 != 0, 2, "Node expected");
-
-  SceneNode* child1 = childdata1->node;
-  SceneNode* child2 = childdata2->node;
-  data->node = new ExclusiveNode( name, *child1, *child2);
-
-  luaL_getmetatable(L, "gr.node");
-  lua_setmetatable(L, -2);
-
-  return 1;
-}
 // Create a sphere node
 extern "C"
 int gr_sphere_cmd(lua_State* L)
@@ -764,7 +738,6 @@ static const luaL_Reg grlib_functions[] = {
   {"union", gr_union_cmd},
   {"conjunction", gr_conjunction_cmd},
   {"subtraction", gr_subtraction_cmd},
-  {"exclusive", gr_exclusive_cmd},
   {"nh_sphere", gr_nh_sphere_cmd},
   {"nh_box", gr_nh_box_cmd},
   {"mesh", gr_mesh_cmd},

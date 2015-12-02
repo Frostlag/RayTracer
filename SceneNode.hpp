@@ -59,6 +59,8 @@ public:
 	bool BoundingVolumeCollide(glm::vec4 E, glm::vec4 P, glm::mat4 M);
 
 	virtual PrimitiveCollisions Collide(glm::vec4 E, glm::vec4 P, glm::mat4 M);
+	virtual void draw(glm::mat4 M);
+	
 private:
 	// The number of SceneNode instances.
 	static unsigned int nodeInstanceCount;
