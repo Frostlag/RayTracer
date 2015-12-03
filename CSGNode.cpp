@@ -164,17 +164,22 @@ PrimitiveCollisions SubtractionNode::Collide(glm::vec4 E, glm::vec4 P, glm::mat4
 	vector<CollisionInfo> n2c = n2pc.getCollisions();
 	bool inN1 = false, inN2 = false;
 	int cs = n1c.size() + n2c.size(), n1counter = 0, n2counter = 0;
+
 	if (n2c.empty())
 		ret = n1pc;
 	else if (!n1c.empty()){
 		glm::vec4 normal;
+    //cout << n1c.size() << " " << n2c.size() << endl;
 		for (int i = 0; i < cs; i++){
-			if (n1counter < n1c.size() && n1c[n1counter].d < n2c[n2counter].d){
+      //cout << "n1[" << n1counter << "]: " << n1c[n1counter].d << "n2[" << n2counter << "]: " << n2c[n2counter].d << endl;
+			if (n1counter < n1c.size() && (n2counter >= n2c.size() || n1c[n1counter].d < n2c[n2counter].d)){
+        //cout << "n1" << endl;
 				if (!inN2)
 					ret.addCollision(n1c[n1counter]);
 				inN1 = !inN1;
 				n1counter++;
 			}else if(n2counter < n2c.size()){
+        //cout << "n2" << endl;
 				if (inN1){
 					CollisionInfo collisionInfo = n2c[n2counter];
 					collisionInfo.normal *= -1;
@@ -184,7 +189,10 @@ PrimitiveCollisions SubtractionNode::Collide(glm::vec4 E, glm::vec4 P, glm::mat4
 				n2counter++;
 			}
 		}
+    //cout << endl;
 	}
+
+  //if (cs > 3) cout << ret.getCollisions().size() << endl;
 	if (!ret.isEmpty()){
 		ret.mat = static_cast<PhongMaterial*>(m_material);
 		ret.node_id = m_nodeId;

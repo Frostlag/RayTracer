@@ -515,11 +515,12 @@ PrimitiveCollisions Torus::Collide(  glm::vec4 E,glm::vec4 P, glm::mat4 M ){
       return ret;
 
   vec4 center = vec4(0,0,0,1);
-
+  //cout << result << endl;
   for (int i = 0; i < result; i++){
       // cout << roots[i] << endl;
       // cout << E + roots[i] * P << endl;
       if (roots[i] <= 0) continue;
+      //cout << "Adding " << roots[i] << endl;
       vec4 ourPoint = (invE + roots[i] * invP);
       vec3 Q = normalize(vec3(ourPoint.x,0, ourPoint.z)) * outerRadius;
       vec3 normal = normalize(vec3(ourPoint) - Q);
