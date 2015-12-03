@@ -1,6 +1,6 @@
 #include "CSGNode.hpp"
 #include <glm/ext.hpp>
-
+#include "Utilities.hpp"
 using namespace std;
 using namespace glm;
 
@@ -21,6 +21,7 @@ PrimitiveCollisions UnionNode::Collide(glm::vec4 E, glm::vec4 P, glm::mat4 M){
 	vector<CollisionInfo> n2c = n2pc.getCollisions();
 	bool inN1 = false, inN2 = false;
 	int cs = n1c.size() + n2c.size(), n1counter = 0, n2counter = 0;
+	//cout << E << endl;
 	if (n1c.empty()){
 		ret = n2pc;
 	}else if (n2c.empty()){
