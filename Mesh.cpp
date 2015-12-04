@@ -124,19 +124,19 @@ PrimitiveCollisions Mesh::Collide(vec4 E, vec4 P, glm::mat4 M){
 			continue;
 
 		CollisionInfo temp = CollisionInfo(d, E + d * P, normalize(vec4(transpose(inverse(mat3(M))) * normal, 0)));
+		vec3 f1 = v1 - potentialPoint;
+		vec3 f2 = v2 - potentialPoint;
+		vec3 f3 = v3 - potentialPoint;
+		float a = length(cross(-v2 + v1, -v3 + v1));
+		float a1 = length(cross(f2, f3)) / a;
+		float a2 = length(cross(f3, f1)) / a;
+		float a3 = length(cross(f1, f2)) / a;
+		temp.normal = normalize( vec4(transpose(inverse(mat3(M))) * (n1 * a1 + n2 * a2 + n3 * a3), 0));
+		//cout << temp.normal << endl;
 		if (texture != NULL && texture->isValid()){
-			vec3 f1 = v1 - potentialPoint;
-			vec3 f2 = v2 - potentialPoint;
-			vec3 f3 = v3 - potentialPoint;
-			float a = length(cross(-v2 + v1, -v3 + v1));
-			float a1 = length(cross(f2, f3)) / a;
-			float a2 = length(cross(f3, f1)) / a;
-			float a3 = length(cross(f1, f2)) / a;
 			vec2 uv = m_textures[m_faces[i].t1] * a1 + m_textures[m_faces[i].t2] * a2 + m_textures[m_faces[i].t3] * a3;
-			temp.normal = normalize( vec4(transpose(inverse(mat3(M))) * (n1 * a1 + n2 * a2 + n3 * a3), 0));
 			temp.useTexture = true;
 			temp.kd = texture->getColour(uv.x,1-uv.y);
-
 		}
 
 		ret.addCollision(temp);

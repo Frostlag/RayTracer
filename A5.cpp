@@ -19,7 +19,7 @@ using namespace glm;
 extern int subdivisions;
 extern int threads;
 extern int cwindow;
-bool super = false;
+bool super = true;
 int supersub = 4;
 float reflectionThreshold = 0.1;
 float myEpsilon = 0.1;
@@ -112,6 +112,8 @@ void A5_Render(
     }
 	return;
 	*/
+	if (super)
+		srand(time(NULL));
 	Window *window;
 
 	if (cwindow > 0){

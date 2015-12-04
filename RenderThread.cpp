@@ -15,6 +15,8 @@ extern PhongMaterial defaultMat;
 extern float reflectionThreshold;
 extern float myEpsilon;
 
+#define MY_RAND_MAX 256
+
 std::list<RenderThread*> RenderThread::Threads;
 std::list<RenderThread*> RenderThread::WorkingThreads;
 
@@ -39,6 +41,8 @@ PrimitiveCollisions RenderThread::traverseScene(SceneNode * root, vec4 E, vec4 P
 		return ret;
 
   }
+  // if (root->m_name == "Eleanor")
+  //   cout << root->m_name << " Bounding Hit" << endl;
 #endif
 	ret = root->Collide(E, P, M);
 
@@ -240,7 +244,12 @@ void RenderThread::main(){
                         vector<vec3> colours;
                         for (int i = -supersub / 2; i < supersub / 2; i++ ){
                             for (int j = -supersub / 2; j < supersub / 2; j++){
-                                vec4 l = invV * vec4(pixel + i * uo4 + j * ro4, 0);
+                                int randX = rand() % MY_RAND_MAX - MY_RAND_MAX >> 2;
+                                int randY = rand() % MY_RAND_MAX - MY_RAND_MAX >> 2;
+                                //vec4 l = invV * vec4(pixel + i * uo4 + j * ro4, 0);
+                                //cout << l << endl;
+                                vec4 l = invV * vec4(pixel + i * uo4 + uo4 * (float) randX / (MY_RAND_MAX >> 2) + j * ro4 + uo4 * (float) randX / (MY_RAND_MAX >> 2), 0);
+                                //cout << l << endl << endl;
                                 PrimitiveCollisions primitiveCollisions = traverseScene(root, E, l, mat4());
                                 if (!primitiveCollisions.isEmpty()){
                                     colours.push_back(calculateColour(primitiveCollisions, E, l));
