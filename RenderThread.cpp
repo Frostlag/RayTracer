@@ -74,14 +74,12 @@ vec3 RenderThread::calculateColour(PrimitiveCollisions primitiveCollisions, vec4
 
 	ret = ambient * kd * mat->getOpacity();
 
-	if (mat->getReflectivity() > 0)
-      ret += calculateReflection(primitiveCollisions, E, P, adds);
-  if (mat->getOpacity() < 1){
-      //float r0 = pow((1 - mat->getIOR()) / (1 + mat->getIOR()), 2);
-      //float rshlick = r0 + (1 - r0) * pow(1 - dot(E, collisionInfo.normal, 5));
-      ret += calculateRefraction(primitiveCollisions, E, P, adds);
-  }
-  ret += calculateLighting(primitiveCollisions, E, P);
+	if (mat->getOpacity() < 1){
+		ret += calculateRefraction(primitiveCollisions, E, P, adds);
+	}
+	else if (mat->getReflectivity() > 0)
+		ret += calculateReflection(primitiveCollisions, E, P, adds);
+	ret += calculateLighting(primitiveCollisions, E, P);
 	return glm::min(ret,1.0f);
 }
 
@@ -154,72 +152,102 @@ vec3 RenderThread::calculateRefraction(PrimitiveCollisions primitiveCollisions, 
     CollisionInfo collisionInfo = primitiveCollisions.getCollisions().front();
     PhongMaterial* mat = primitiveCollisions.mat;
     vec3 normal = vec3(collisionInfo.normal);
+    float costheta = dot(-P,vec4(normal,0));
+	if (costheta < 0) return ret;
     float rindex1 = 1;
     float rindex2 = mat->getIOR();
     float snelldex = rindex1 / rindex2;
-    float costheta = -dot(-P,vec4(normal,0));
     float sinsqtheta = pow(snelldex,2) * (1- pow(costheta,2));
-    vec3 refracted = normalize((snelldex * vec3(P)) + vec3((snelldex * costheta - sqrt(1 - sinsqtheta)) * normal));
-    vec4 newE = collisionInfo.position + myEpsilon * vec4(refracted,0);
+	float r0 = (1 - mat->getIOR()) / (1 + mat->getIOR());
+	r0 = r0 * r0;
+	float rshlick = r0 + (1 - r0) * pow(1 - costheta, 5);
+	if (rindex2 < 1)
+		rshlick = r0 + (1 - r0) * pow(1 - sqrt( 1 - sinsqtheta  ), 5);
 
+	rshlick = (1 - rshlick);
+    vec3 refracted = normalize((snelldex * vec3(P)) + vec3((snelldex * costheta - sqrt(1 - sinsqtheta)) * normal));
+    vec4 refractedE = collisionInfo.position + myEpsilon * vec4(refracted,0);
+	//cout << costheta << endl;
+	//cout << r0 << endl;
+	//cout << rshlick << endl;
     //cout << "Entering from " << newE << " along " << P << ", then travelling along " << refracted << " because of normal " << to_string(normal) << endl;
 
-     PrimitiveCollisions newCollisions = traverseScene(root, newE, vec4(refracted,0), mat4());
-    if (newCollisions.isEmpty()){
-        cout << "Already out" << endl;
-        //return ret;
-        return ret;
-    }
-    if(newCollisions.node_id != primitiveCollisions.node_id){
-        return (1 - mat->getOpacity()) * calculateColour(newCollisions, newE, vec4(refracted,0), adds);
-    }
+	if (rshlick < 0.95){
+		vec4 reflected = normalize(P - 2 * dot(P, vec4(normal,0)) * vec4(normal,0));
+		vec4 reflectedE = collisionInfo.position + reflected;
+		PrimitiveCollisions reflectedCollisions = traverseScene(root, reflectedE, reflected, mat4());
+		if (!reflectedCollisions.isEmpty()){
+			//cout <<r0 << endl << costheta << endl;
+			//cout << adds << endl << rshlick << endl << ( 1- mat->getOpacity()) << endl << endl;
+			vec3 newColour = calculateColour(
+					reflectedCollisions,
+					reflectedE,
+					reflected,
+					adds * (1 - rshlick)  * (1 - mat->getOpacity()) * length(primitiveCollisions.mat->getKS()) / 3);
+			ret += (1-rshlick) * (1 - mat->getOpacity()) * newColour * primitiveCollisions.mat->getKS();
+		}else{
+			ret += (1-rshlick) * (1 - mat->getOpacity()) * generateBG(reflectedE, reflected);
+		}
+	}
+	if (rshlick > 0.05){
+		PrimitiveCollisions newCollisions = traverseScene(root, refractedE, vec4(refracted,0), mat4());
+		if (newCollisions.isEmpty()){
+			cout << "Already out" << endl;
+			//return ret;
+			return ret;
+		}
+		if(newCollisions.node_id != primitiveCollisions.node_id){
+			return ret + rshlick * (1 - mat->getOpacity()) * calculateColour(newCollisions, refractedE, vec4(refracted,0), adds);
+		}
 
-    collisionInfo = newCollisions.getCollisions().front();
-    normal = vec3(-collisionInfo.normal);
-    //cout << "Next internal hit is " << collisionInfo.position << ", normal is " << normal << endl;
-    rindex1 = rindex2;
-    rindex2 = 1;
-    snelldex = rindex1 / rindex2;
+		collisionInfo = newCollisions.getCollisions().front();
+		normal = vec3(-collisionInfo.normal);
+		//cout << "Next internal hit is " << collisionInfo.position << ", normal is " << normal << endl;
+		rindex1 = rindex2;
+		rindex2 = 1;
+		snelldex = rindex1 / rindex2;
 
-    costheta = -dot(refracted,normal);
-    sinsqtheta = pow(snelldex,2) * (1- pow(costheta,2));
+		costheta = -dot(refracted,normal);
+		sinsqtheta = pow(snelldex,2) * (1- pow(costheta,2));
 
-    int intrefs = 0;
-    while (sinsqtheta > 1){
-        //cout << "Internal reflection" << endl;
-        //cout << "Hit the other end " << newCollisions.getCollisions().size()  << endl;
-        //cout << "Ray is " << to_string(refracted) << ", normal is " << to_string(normal) << endl;
-        refracted = normalize(refracted -  2 * dot(refracted, normal) * normal);
-        //cout << "Reflacted ray is " << to_string(refracted) << endl;
-        newE = collisionInfo.position + myEpsilon * vec4(refracted, 0);
-        //cout << "Attempting to exit from " << to_string(collisionInfo.position) << " along " << to_string(P) << ", then travelling along " << to_string(refracted) << " because of normal " << to_string(normal) << endl;
-        newCollisions = traverseScene(root, newE, vec4(refracted, 0), mat4());
-        if (newCollisions.isEmpty()){
-            cout << "Already out after bouncing around" << endl;
-            //return ret;
-            return (1 - mat->getOpacity()) * generateBG(newE, vec4(refracted,0));
-        }
-        collisionInfo = newCollisions.getCollisions()[1];
-        normal = vec3(-collisionInfo.normal);
-        costheta = -dot(refracted,normal);
-        sinsqtheta = pow(snelldex,2) * (1- pow(costheta,2));
-        intrefs++;
-        if (intrefs >= 10)
-            break;
-    }
+		int intrefs = 0;
+		while (sinsqtheta > 1){
+			//cout << "Internal reflection" << endl;
+			//cout << "Hit the other end " << newCollisions.getCollisions().size()  << endl;
+			//cout << "Ray is " << to_string(refracted) << ", normal is " << to_string(normal) << endl;
+			refracted = normalize(refracted -  2 * dot(refracted, normal) * normal);
+			//cout << "Reflacted ray is " << to_string(refracted) << endl;
+			refractedE = collisionInfo.position + myEpsilon * vec4(refracted, 0);
+			//cout << "Attempting to exit from " << to_string(collisionInfo.position) << " along " << to_string(P) << ", then travelling along " << to_string(refracted) << " because of normal " << to_string(normal) << endl;
+			newCollisions = traverseScene(root, refractedE, vec4(refracted, 0), mat4());
+			if (newCollisions.isEmpty()){
+				cout << "Already out after bouncing around" << endl;
+				//return ret;
+				return ret + rshlick * (1 - mat->getOpacity()) * generateBG(refractedE, vec4(refracted,0));
+			}
+			collisionInfo = newCollisions.getCollisions()[1];
+			normal = vec3(-collisionInfo.normal);
+			costheta = -dot(refracted,normal);
+			sinsqtheta = pow(snelldex,2) * (1- pow(costheta,2));
+			intrefs++;
+			if (intrefs >= 10)
+				break;
+		}
 
-    refracted = (snelldex * refracted) + ((snelldex * costheta - sqrt(1 - sinsqtheta)) * normal);
-    newE = collisionInfo.position + myEpsilon * vec4(refracted,0);
-    //cout << "Out of volume, now travelling along " << refracted << " from  " << newE << endl;
-    //cout << "Entered via " << P << endl;
-    newCollisions = traverseScene(root, newE, vec4(refracted,0), mat4());
-    if (newCollisions.isEmpty()){
-        //cout << "Exit ray didn't hit anything" << endl;
-        //return ret;
-        return (1 - mat->getOpacity()) * generateBG(newE, vec4(refracted,0));
-    }
+		refracted = (snelldex * refracted) + ((snelldex * costheta - sqrt(1 - sinsqtheta)) * normal);
+		refractedE = collisionInfo.position + myEpsilon * vec4(refracted,0);
+		//cout << "Out of volume, now travelling along " << refracted << " from  " << newE << endl;
+		//cout << "Entered via " << P << endl;
+		newCollisions = traverseScene(root, refractedE, vec4(refracted,0), mat4());
+		if (newCollisions.isEmpty()){
+			//cout << "Exit ray didn't hit anything" << endl;
+			//return ret;
+			return ret + rshlick * (1 - mat->getOpacity()) * generateBG(refractedE, vec4(refracted,0));
+		}
+		ret += rshlick * (1 - mat->getOpacity()) * calculateColour(newCollisions, refractedE, vec4(refracted,0), adds);
+	}
     //cout << "Exit ray hit " << newCollisions.node_name << endl;
-    return (1 - mat->getOpacity()) * calculateColour(newCollisions, newE, vec4(refracted,0), adds);
+    return  ret;
 
 
 }
