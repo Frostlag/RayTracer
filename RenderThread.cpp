@@ -96,8 +96,8 @@ vec3 RenderThread::calculateLighting(PrimitiveCollisions primitiveCollisions, ve
 		vec4 myEye = collisionInfo.position + l;
 		PrimitiveCollisions obstruction = traverseScene( root, myEye, l, mat4());
         float lighteffect = 1;
-		if (!obstruction.isEmpty()){
-            
+		if (!obstruction.isEmpty() && obstruction.getCollisions().size() > 1){
+
 			if ( length(obstruction.getCollisions().front().d * l) < length(light->position - vec3(collisionInfo.position))){
                 //cout <<obstruction.node_name << endl;
                 if (obstruction.mat->getOpacity() < 1){

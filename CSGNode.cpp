@@ -172,6 +172,10 @@ PrimitiveCollisions SubtractionNode::Collide(glm::vec4 E, glm::vec4 P, glm::mat4
 		glm::vec4 normal;
     //cout << n1c.size() << " " << n2c.size() << endl;
 		for (int i = 0; i < cs; i++){
+      if(n1c.size() % 2 == 1)
+        inN1 = true;
+      if(n2c.size() % 2 == 1)
+        inN2 = true;
       //cout << "n1[" << n1counter << "]: " << n1c[n1counter].d << "n2[" << n2counter << "]: " << n2c[n2counter].d << endl;
 			if (n1counter < n1c.size() && (n2counter >= n2c.size() || n1c[n1counter].d < n2c[n2counter].d)){
         //cout << "n1" << endl;
@@ -184,6 +188,11 @@ PrimitiveCollisions SubtractionNode::Collide(glm::vec4 E, glm::vec4 P, glm::mat4
 				if (inN1){
 					CollisionInfo collisionInfo = n2c[n2counter];
 					collisionInfo.normal *= -1;
+
+          // if (collisionInfo.normal.y == 1){
+          //   cout << collisionInfo.normal << endl;
+          //   cout << collisionInfo.position << endl;
+          // }
 					ret.addCollision(collisionInfo);
 				}
 				inN2 = !inN2;
