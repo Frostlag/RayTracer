@@ -239,14 +239,35 @@ room_wall1 = gr.node("room_wall1")
 room_wall1:add_child(room_wall)
 room:add_child(room_wall1)
 
+window_hole_x_offset = 50
+window_hole_y_offset = 50
+
 window_hole = gr.cube("window_hole")
 window_hole:translate(-0.5,-0.5,-0.5)
-window_hole:scale(100,100,10)
+window_hole:scale(40,40,100)
+window_hole1 = gr.node("window_hole1")
+window_hole1:add_child(window_hole)
+window_hole2 = gr.node("window_hole2")
+window_hole2:translate(window_hole_x_offset,0,0)
+window_hole2:add_child(window_hole)
+window_hole3 = gr.node("window_hole3")
+window_hole3:add_child(window_hole)
+window_hole3:translate(0,window_hole_y_offset,0)
+window_hole4 = gr.node("window_hole4")
+window_hole4:add_child(window_hole)
+window_hole4:translate(window_hole_x_offset,window_hole_y_offset,0)
+
+window_holes = gr.node("window_holes")
+window_holes:add_child(window_hole1)
+window_holes:add_child(window_hole2)
+window_holes:add_child(window_hole3)
+window_holes:add_child(window_hole4)
+
 --window_hole:rotate("y",90)
-window_hole:set_material(wall_mat)
-room_wall2 = gr.node("room_wall2")
-room_wall2:add_child(window_hole)
-room_wall2 = gr.subtraction("room_wall2",room_wall,window_hole)
+--window_hole:set_material(wall_mat)
+--room_wall2 = gr.node("room_wall2")
+--room_wall2:add_child(window_hole)
+room_wall2 = gr.union("room_wall2",window_holes,window_holes)
 room_wall2:set_material(wall_mat)
 --room_wall2:add_child(room_wall)
 room_wall2:rotate("y",90)
@@ -278,8 +299,8 @@ scene_root:add_child(table)
 scene_root:add_child(room)
 
 
-white_light = gr.light({100.0, 100.0, 300.0}, {0.9, 0.9, 0.9}, {1, 0, 0})
+white_light = gr.light({300.0, 100.0, 0.0}, {0.9, 0.9, 0.9}, {1, 0, 0})
 
 gr.render(scene_root, 'final_scene.png', 128*4, 128*4,
-	  {0, 300, 500}, {0, 0, 0}, {0, 1, 0}, 50,
+	  {0, 500, 10}, {0, 0, 0}, {0, 1, 0}, 50,
 	  {0.5, 0.5, 0.5}, {white_light})
