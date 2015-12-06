@@ -6,7 +6,7 @@ floor_mat = gr.material({1, 1, 1}, {0, 0, 0}, 10)
 roof_mat = gr.material({1, 1, 1}, {1, 1, 1}, 10)
 baoding_mat = gr.new_material({0.0, 0.0, 0.0}, {0.5, 0.7, 0.5}, 25, 0, {0,2})
 panel_mat = gr.new_material({0.2, 0.2, 0.2}, {0.5, 0.5, 0.5}, 25, 0.5, {1,10})
-table_mat = gr.material({0.4,0.4,0.4},{0.8,0.8,0.8}, 10)
+table_mat = gr.material({0.3,0.3,0.3},{0.8,0.8,0.8}, 10)
 table_leg_mat = gr.new_material({0.2, 0.2, 0.2}, {0.5, 0.5, 0.5}, 25, 0.3, {1,10})
 orange = gr.material({0.5,0.5,0.5},{0.5,0.6,0.5}, 0)
 monitor_plastic = gr.material({0.1,0.1,0.1},{0.1,0.1,0.1}, 50)
@@ -16,7 +16,7 @@ keyboard_mat = gr.material({0.2,0.2,0.2},{1,1,1}, 50)
 mouse_mat = gr.material({0.8,0.8,0.8},{1,1,1}, 50)
 baoding_holder_mat = gr.material({1, 0, 0}, {0.5, 0.7, 0.5}, 25)
 BigSister_tex = gr.texture("Assets/BigSister.png")
-Eleanor_mat = gr.material({0,0,0},{1,1,1}, 10)
+Eleanor_mat = gr.material({0,0,0},{1,1,1}, 5)
 
 mat1 = gr.material({0.7, 1.0, 0.7}, {0.5, 0.7, 0.5}, 25)
 mat2 = gr.material({1, 0, 0}, {0.5, 0.7, 0.5}, 25)
@@ -378,7 +378,8 @@ mouse:translate(30,2,18)
 table:add_child(mouse)
 
 table:add_child(keyboard)
-
+keyboard:rotate("x",10)
+keyboard:translate(-30,3,23)
 table:add_child(baoding_balls)
 --baoding_balls:scale(1.5,1.5,1.5)
 baoding_balls:translate(-50,8,-2)
@@ -386,14 +387,12 @@ baoding_balls:translate(-50,8,-2)
 table:add_child(monitor)
 monitor:translate(-20,2.3,-20)
 
-
-
 table:add_child(uupa)
 uupa:rotate("y",-30)
 uupa:translate(40,8,-20)
 
 
-table:add_child(Eleanor)
+--table:add_child(Eleanor)
 Eleanor:scale(1.5,1.5,1.5)
 Eleanor:rotate("y",-45)
 Eleanor:translate(55,3,0)
@@ -406,12 +405,13 @@ scene_root:add_child(room)
 
 
 white_light = gr.light({5000.0, 100.0, 1500.0}, {0.8, 0.8, 0.8}, {1, 0, 0})
-room_light = gr.light({-180,50,-180}, {0.7,0.7,0.7}, {1,0,0})
+room_light = gr.light({-220,60,-100}, {0.5,0.5,0.5}, {1,0,0})
+model_light = gr.light({0,-20,-230}, {0.0,0.0,0.0},{1,0,0})
 
 final_camera_pos = {-100, -10, -160}
 final_camera_dir = {-150, -0, -180}
 
 test_camera_pos = {-100, 50, -160}
 test_camera_dir = {-150, -0, -180}
-gr.render(scene_root, 'final_scene.png', 128*16, 128*16,  final_camera_pos, final_camera_dir, {0, 1, 0}, 50,  {0.2, 0.2, 0.2}, {white_light, room_light})
+gr.render(scene_root, 'final_scene.png', 128*4 ,128*4,  final_camera_pos, final_camera_dir, {0, 1, 0}, 50,  {0.3, 0.3, 0.3}, {white_light, room_light})
 --gr.render(scene_root, 'final_scene.png', 128*4, 128*4,  test_camera_pos, test_camera_dir, {0, 1, 0}, 50,  {0.5, 0.5, 0.5}, {white_light, room_light})
