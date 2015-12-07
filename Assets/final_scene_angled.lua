@@ -396,7 +396,7 @@ uupa:translate(40,8,-20)
 table:add_child(Eleanor)
 Eleanor:scale(1.5,1.5,1.5)
 Eleanor:rotate("y",-45)
-Eleanor:translate(55,3,0)
+Eleanor:translate(55,3.1,0)
 table:rotate("y",90)
 table:translate(-wall_width/2+50,-35,-wall_width/2+70)
 scene_root:add_child(table)
@@ -409,10 +409,10 @@ white_light = gr.light({5000.0, 100.0, 1500.0}, {0.8, 0.8, 0.8}, {1, 0, 0})
 room_light = gr.light({-220,60,-100}, {0.5,0.5,0.5}, {1,0,0})
 model_light = gr.light({0,-20,-230}, {0.0,0.0,0.0},{1,0,0})
 
-final_camera_pos = {-100, -10, -160}
-final_camera_dir = {-150, -0, -180}
+final_camera_pos = {-135, 35, -176}
+final_camera_dir = {-185, 10, -196}
 
 test_camera_pos = {-100, 50, -160}
 test_camera_dir = {-150, -0, -180}
-gr.render(scene_root, 'final_scene_2.png', 128*4,128*4,  final_camera_pos, final_camera_dir, {0, 1, 0}, 50,  {0.3, 0.3, 0.3}, {white_light, room_light})
+gr.render(scene_root, 'final_scene_angled.png', 128*16,128*16,  final_camera_pos, final_camera_dir, {0, 1, 0}, 50,  {0.5, 0.5, 0.5}, {white_light, room_light})
 --gr.render(scene_root, 'final_scene.png', 128*4, 128*4,  test_camera_pos, test_camera_dir, {0, 1, 0}, 50,  {0.5, 0.5, 0.5}, {white_light, room_light})

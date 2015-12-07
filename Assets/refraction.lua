@@ -1,13 +1,15 @@
 -- A simple scene with some miscellaneous geometry.
 
 mat1 = gr.material({0.7, 1.0, 0.7}, {0.5, 0.7, 0.5}, 25)
-newmat1 = gr.new_material({0.7, 1.0, 0.7}, {0.5, 0.7, 0.5}, 25, 1,{1,1})
+newmat1 = gr.new_material({0.7, 1.0, 0.7}, {0.5, 0.7, 0.5}, 25, 1,{1,1.5})
 mat2 = gr.material({0.5, 0.5, 0.5}, {0.5, 0.7, 0.5}, 25)
-newmat2 = gr.new_material({0.5, 0.5, 0.5}, {0.5, 0.7, 0.5}, 25, 1,{1,1})
+newmat2 = gr.new_material({0.5, 0.5, 0.5}, {0.5, 0.7, 0.5}, 25, 1,{1,1.5})
 mat3 = gr.material({1.0, 0.6, 0.1}, {0.5, 0.7, 0.5}, 25)
-newmat3 = gr.new_material({1.0, 0.6, 0.1}, {0.5, 0.7, 0.5}, 25, 1,{1,1})
+newmat3 = gr.new_material({1.0, 0.6, 0.1}, {0.5, 0.7, 0.5}, 25, 1,{1,2})
 mat4 = gr.material({0.7, 0.6, 1.0}, {0.5, 0.4, 0.8}, 25)
-newmat4 = gr.new_material({0.7, 0.6, 1.0}, {0.5, 0.4, 0.8}, 25, 1,{1,1})
+newmat4 = gr.new_material({0.7, 0.6, 1.0}, {0.5, 0.4, 0.8}, 25, 1,{1,5.1})
+
+translucent_mat = gr.new_material({0, 0, 0}, {1, 1,1}, 5, 1,{0,1.5})
 
 scene_root = gr.node('root')
 
@@ -35,10 +37,17 @@ s5 = gr.nh_sphere('s5', {0, 100, -250}, 25)
 scene_root:add_child(s5)
 s5:set_material(newmat1)
 
+s6 = gr.cone('s6')
+s6:rotate("x",-90)
+scene_root:add_child(s6)
+s6:scale(100,100,100)
+s6:translate(0,0,600)
+s6:set_material(translucent_mat)
+
 
 white_light = gr.light({-100.0, 150.0, 400.0}, {0.6, 0.6, 0.6}, {1, 0, 0})
 orange_light = gr.light({400.0, 100.0, 150.0}, {0.6, 0.0, 0.6}, {1, 0, 0})
 
-gr.render(scene_root, 'mirror_AA.png', 512*2, 512*2,
+gr.render(scene_root, 'refraction_AA.png', 512*2, 512*2,
 	  {0, 0, 800}, {0, 0, -1}, {0, 1, 0}, 50,
 	  {0.3, 0.3, 0.3}, {white_light, orange_light})

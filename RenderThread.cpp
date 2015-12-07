@@ -41,8 +41,6 @@ PrimitiveCollisions RenderThread::traverseScene(SceneNode * root, vec4 E, vec4 P
 		return ret;
 
   }
-  // if (root->m_name == "Eleanor")
-  //   cout << root->m_name << " Bounding Hit" << endl;
 #endif
 	ret = root->Collide(E, P, M);
 
@@ -62,8 +60,9 @@ vec3 RenderThread::calculateColour(PrimitiveCollisions primitiveCollisions, vec4
 
 	if (primitiveCollisions.isEmpty())
 		return ret;
-  //cout << primitiveCollisions.node_name << endl;
   CollisionInfo collisionInfo = primitiveCollisions.getCollisions().front();
+	//if(primitiveCollisions.node_name == "Eleanor_mesh")
+	//	cout << collisionInfo.position << endl;
 
   PhongMaterial* mat = primitiveCollisions.mat;
 	if (mat == NULL)
@@ -192,7 +191,7 @@ vec3 RenderThread::calculateRefraction(PrimitiveCollisions primitiveCollisions, 
 	if (rshlick > 0.05){
 		PrimitiveCollisions newCollisions = traverseScene(root, refractedE, vec4(refracted,0), mat4());
 		if (newCollisions.isEmpty()){
-			cout << "Already out" << endl;
+			//cout << "Already out" << endl;
 			//return ret;
 			return ret;
 		}
@@ -221,7 +220,7 @@ vec3 RenderThread::calculateRefraction(PrimitiveCollisions primitiveCollisions, 
 			//cout << "Attempting to exit from " << to_string(collisionInfo.position) << " along " << to_string(P) << ", then travelling along " << to_string(refracted) << " because of normal " << to_string(normal) << endl;
 			newCollisions = traverseScene(root, refractedE, vec4(refracted, 0), mat4());
 			if (newCollisions.isEmpty()){
-				cout << "Already out after bouncing around" << endl;
+				//cout << "Already out after bouncing around" << endl;
 				//return ret;
 				return ret + rshlick * (1 - mat->getOpacity()) * generateBG(refractedE, vec4(refracted,0));
 			}

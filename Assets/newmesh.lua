@@ -19,6 +19,6 @@ s1:set_texture(tex1);
 
 white_light = gr.light({-100.0, 0.0, 400.0}, {0.9, 0.9, 0.9}, {1, 0, 0})
 
-gr.render(scene_root, 'new_mesh.png', 128*8, 128*8,
+gr.render(scene_root, 'new_mesh.png', 128*4, 128*4,
 	  {0, 0, 300}, {0, 0, -800}, {0, 1, 0}, 50,
 	  {0.5, 0.5, 0.5}, {white_light})
